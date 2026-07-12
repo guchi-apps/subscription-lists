@@ -33,6 +33,12 @@ import type { SubscriptionPriceDTO } from "@/types";
 
 const CURRENCY_LABEL: Record<"JPY" | "USD", string> = { JPY: "円", USD: "ドル" };
 
+// 枠で囲む代わりに下線だけで入力欄を区切る、サブスク編集画面と同じ見た目
+const LINE_INPUT_CLASS =
+  "rounded-none border-x-0 border-t-0 border-b border-input bg-transparent px-0 focus-visible:ring-0 focus-visible:border-b-2 focus-visible:border-ring disabled:bg-transparent dark:bg-transparent dark:disabled:bg-transparent";
+const LINE_SELECT_TRIGGER_CLASS =
+  "rounded-none border-x-0 border-t-0 border-b border-input bg-transparent pl-0 focus-visible:ring-0 focus-visible:border-b-2 focus-visible:border-ring dark:bg-transparent dark:hover:bg-transparent";
+
 const priceFormSchema = z
   .object({
     amount: z.number().nonnegative("金額は0以上の数値を入力してください"),
@@ -206,25 +212,29 @@ export function PriceHistoryManager({
               <DialogTitle>{editing ? "料金を編集" : "料金変更を追加"}</DialogTitle>
             </DialogHeader>
             <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-              <div className="grid grid-cols-[1fr_auto] gap-4">
-                <div className="space-y-1.5">
-                  <Label htmlFor="price-amount">金額</Label>
+              <div className="space-y-1.5">
+                <Label htmlFor="price-amount">金額</Label>
+                <div
+                  className={`flex items-center border-b transition-colors focus-within:border-b-2 focus-within:border-ring ${
+                    errors.amount ? "border-destructive" : "border-input"
+                  }`}
+                >
                   <Input
                     id="price-amount"
                     type="number"
                     step="1"
+                    className="flex-1 rounded-none border-0 bg-transparent px-0 focus-visible:ring-0 dark:bg-transparent"
                     {...register("amount", { valueAsNumber: true })}
                   />
-                  {errors.amount && <p className="text-sm text-destructive">{errors.amount.message}</p>}
-                </div>
-                <div className="space-y-1.5">
-                  <Label htmlFor="price-currency">通貨</Label>
                   <Controller
                     control={control}
                     name="currency"
                     render={({ field }) => (
                       <Select value={field.value} onValueChange={field.onChange}>
-                        <SelectTrigger id="price-currency" className="w-24">
+                        <SelectTrigger
+                          id="price-currency"
+                          className="w-20 shrink-0 rounded-none border-0 bg-transparent pl-0 focus-visible:ring-0 dark:bg-transparent dark:hover:bg-transparent"
+                        >
                           <SelectValue />
                         </SelectTrigger>
                         <SelectContent>
@@ -235,6 +245,7 @@ export function PriceHistoryManager({
                     )}
                   />
                 </div>
+                {errors.amount && <p className="text-sm text-destructive">{errors.amount.message}</p>}
               </div>
               <div className="space-y-1.5">
                 <Label htmlFor="price-billingInterval">支払い周期</Label>
@@ -244,7 +255,7 @@ export function PriceHistoryManager({
                     type="number"
                     min={1}
                     step={1}
-                    className="w-20"
+                    className={`${LINE_INPUT_CLASS} w-20`}
                     {...register("billingInterval", { valueAsNumber: true })}
                   />
                   <Controller
@@ -252,7 +263,7 @@ export function PriceHistoryManager({
                     name="billingCycle"
                     render={({ field }) => (
                       <Select value={field.value} onValueChange={field.onChange}>
-                        <SelectTrigger id="price-billingCycle" className="w-full">
+                        <SelectTrigger id="price-billingCycle" className={`${LINE_SELECT_TRIGGER_CLASS} w-full`}>
                           <SelectValue />
                         </SelectTrigger>
                         <SelectContent>
@@ -276,6 +287,7 @@ export function PriceHistoryManager({
                       type="number"
                       min={1}
                       max={12}
+                      className={LINE_INPUT_CLASS}
                       {...register("billingMonth", { valueAsNumber: true })}
                     />
                     {errors.billingMonth && (
@@ -290,6 +302,7 @@ export function PriceHistoryManager({
                     type="number"
                     min={1}
                     max={31}
+                    className={LINE_INPUT_CLASS}
                     {...register("billingDay", { valueAsNumber: true })}
                   />
                   {errors.billingDay && (
@@ -299,7 +312,12 @@ export function PriceHistoryManager({
               </div>
               <div className="space-y-1.5">
                 <Label htmlFor="price-effectiveFrom">この金額の適用開始日</Label>
-                <Input id="price-effectiveFrom" type="date" {...register("effectiveFrom")} />
+                <Input
+                  id="price-effectiveFrom"
+                  type="date"
+                  className={LINE_INPUT_CLASS}
+                  {...register("effectiveFrom")}
+                />
                 {errors.effectiveFrom && (
                   <p className="text-sm text-destructive">{errors.effectiveFrom.message}</p>
                 )}
@@ -309,6 +327,7 @@ export function PriceHistoryManager({
                 <Textarea
                   id="price-memo"
                   placeholder="例: 学割適用、プラン変更"
+                  className={LINE_INPUT_CLASS}
                   {...register("memo")}
                 />
               </div>
