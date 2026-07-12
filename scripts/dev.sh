@@ -9,6 +9,9 @@ source "$ROOT_DIR/scripts/dev-wsl-lan.sh"
 
 setup_wsl_lan_dev_access "$PORT" "$ROOT_DIR"
 
+echo "外出先: https://subscribe-dev.minagu.work"
+echo ""
+
 export DEV_ALLOWED_ORIGINS="${DEV_ALLOWED_ORIGINS:-}"
 
 exec next dev -H 0.0.0.0 -p "${PORT}"

@@ -37,6 +37,29 @@ npm run dev
 
 Google OAuth を使う場合は、開発用の Google Cloud クライアントを別途用意し、承認済みリダイレクト URI に `http://localhost:3000/api/auth/callback/google` を登録する。
 
+### 別端末（スマホ等）からの動作確認
+
+`npm run dev` 起動時に、以下のアクセス経路がコンソールに表示される。
+
+- **LAN 内**: `http://<LAN-IP>.sslip.io:3000`（同じ Wi-Fi 上のスマホ等から）
+- **外出先**: `https://subscribe-dev.minagu.work`（Cloudflare Tunnel 経由。共有トンネル `signaly-dev` に相乗り）
+
+いずれも `next.config.ts` の `allowedDevOrigins`（`*.sslip.io` / `*.minagu.work`）でクロスオリジンリクエストを許可している。
+
+**外出先からのアクセス（Cloudflare Tunnel）**
+
+`npm run dev`（`scripts/dev-wsl-lan.sh`）が、共有 Named Tunnel `signaly-dev` が未起動なら自動で起動する（他アプリの dev サーバーで既に起動済みならそのまま利用、二重起動はしない）。起動ログは `/tmp/cloudflared-signaly-dev.log`。
+
+自動起動に失敗した場合は手動で起動する:
+
+```bash
+cloudflared tunnel run signaly-dev
+```
+
+（Cloudflare 側のトンネル・DNS 設定はこのリポジトリの管理外。`~/.cloudflared/config.yml` にホスト設定済み）
+
+Google ログインを外出先でも確認する場合は、開発用 Google OAuth クライアントの承認済みリダイレクト URI に `https://subscribe-dev.minagu.work/api/auth/callback/google` を追加登録する。また、Cloudflare Access で本人の Google アカウントのみアクセスを許可する設定を Zero Trust ダッシュボード側で行うことを推奨する（このリポジトリの管理外）。
+
 ## 主なスクリプト
 
 | コマンド | 内容 |
