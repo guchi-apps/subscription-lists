@@ -1,0 +1,130 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+// --- NextAuth.js / Auth.js v5 ---
+
+model Account {
+  id                String  @id @default(cuid())
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String? @db.Text
+  access_token      String? @db.Text
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String? @db.Text
+  session_state     String?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+}
+
+model Session {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model VerificationToken {
+  identifier String
+  token      String
+  expires    DateTime
+
+  @@unique([identifier, token])
+}
+
+model User {
+  id            String    @id @default(cuid())
+  email         String    @unique
+  emailVerified DateTime?
+  name          String?
+  image         String?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  accounts        Account[]
+  sessions        Session[]
+  subscriptions   Subscription[]
+  paymentMethods  PaymentMethod[]
+  contractMethods ContractMethod[]
+}
+
+// --- Application models ---
+
+enum BillingCycle {
+  MONTHLY
+  YEARLY
+}
+
+model PaymentMethod {
+  id           String   @id @default(cuid())
+  userId       String
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  name         String // 例: "楽天カード", "口座振替"
+  displayOrder Int      @default(0)
+  isActive     Boolean  @default(true)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  subscriptions Subscription[]
+
+  @@unique([userId, name])
+  @@index([userId, displayOrder])
+}
+
+model ContractMethod {
+  id           String   @id @default(cuid())
+  userId       String
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  name         String // 例: "Web", "店舗", "App Store"
+  displayOrder Int      @default(0)
+  isActive     Boolean  @default(true)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  subscriptions Subscription[]
+
+  @@unique([userId, name])
+  @@index([userId, displayOrder])
+}
+
+model Subscription {
+  id     String @id @default(cuid())
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  name         String // サブスク名
+  amount       Decimal      @db.Decimal(10, 2) // 1回あたりの請求額
+  billingCycle BillingCycle @default(MONTHLY)
+  billingDay   Int // 支払日(1-31)
+  billingMonth Int? // YEARLY のときのみ使用(1-12)
+
+  paymentMethodId  String
+  paymentMethod    PaymentMethod  @relation(fields: [paymentMethodId], references: [id], onDelete: Restrict)
+  contractMethodId String
+  contractMethod   ContractMethod @relation(fields: [contractMethodId], references: [id], onDelete: Restrict)
+
+  startDate   DateTime  @db.Date // 契約開始日
+  cancelledAt DateTime? @db.Date // 解約日(null=継続中)
+  memo        String?   @db.Text
+  isActive    Boolean   @default(true)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([userId, isActive])
+  @@index([paymentMethodId])
+  @@index([contractMethodId])
+}
