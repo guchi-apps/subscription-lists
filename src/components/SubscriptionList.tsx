@@ -29,6 +29,8 @@ import {
 } from "@/components/ui/alert-dialog";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Label } from "@/components/ui/label";
+import { Switch } from "@/components/ui/switch";
 import {
   CONTRACT_STATUS_LABEL,
   convertToJpy,
@@ -89,17 +91,19 @@ export function SubscriptionList({
 }) {
   const router = useRouter();
   const [deletingId, setDeletingId] = useState<string | null>(null);
+  const [includeEnded, setIncludeEnded] = useState(false);
 
   const rows = useMemo(() => {
     return subscriptions
       .map(toRow)
+      .filter(({ status }) => includeEnded || status !== "ENDED")
       .sort((a, b) => {
         if ((a.status === "ENDED") !== (b.status === "ENDED")) {
           return a.status === "ENDED" ? 1 : -1;
         }
         return a.sub.name.localeCompare(b.sub.name, "ja");
       });
-  }, [subscriptions]);
+  }, [subscriptions, includeEnded]);
 
   async function handleDelete(id: string) {
     setDeletingId(id);
@@ -118,7 +122,13 @@ export function SubscriptionList({
 
   return (
     <div className="space-y-4">
-      <div className="flex items-center justify-end gap-2">
+      <div className="flex items-center justify-between gap-2">
+        <div className="flex items-center gap-2">
+          <Switch id="include-ended" checked={includeEnded} onCheckedChange={setIncludeEnded} />
+          <Label htmlFor="include-ended" className="text-sm font-normal">
+            解約済みも表示する
+          </Label>
+        </div>
         <Button asChild>
           <Link href="/subscriptions/new">
             <Plus className="size-4" />
@@ -128,7 +138,9 @@ export function SubscriptionList({
       </div>
 
       {rows.length === 0 ? (
-        <p className="text-sm text-muted-foreground">まだサブスクが登録されていません。</p>
+        <p className="text-sm text-muted-foreground">
+          {includeEnded ? "まだサブスクが登録されていません。" : "現在契約中のサブスクはありません。"}
+        </p>
       ) : (
         <>
           <div className="hidden md:block">
