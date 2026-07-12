@@ -219,13 +219,6 @@ export function PriceHistoryManager({
                     errors.amount ? "border-destructive" : "border-input"
                   }`}
                 >
-                  <Input
-                    id="price-amount"
-                    type="number"
-                    step="1"
-                    className="flex-1 rounded-none border-0 bg-transparent px-0 focus-visible:ring-0 dark:bg-transparent"
-                    {...register("amount", { valueAsNumber: true })}
-                  />
                   <Controller
                     control={control}
                     name="currency"
@@ -233,16 +226,24 @@ export function PriceHistoryManager({
                       <Select value={field.value} onValueChange={field.onChange}>
                         <SelectTrigger
                           id="price-currency"
-                          className="w-20 shrink-0 rounded-none border-0 bg-transparent pl-0 focus-visible:ring-0 dark:bg-transparent dark:hover:bg-transparent"
+                          aria-label="通貨"
+                          className="w-14 shrink-0 rounded-none border-0 bg-transparent pl-0 focus-visible:ring-0 dark:bg-transparent dark:hover:bg-transparent"
                         >
                           <SelectValue />
                         </SelectTrigger>
                         <SelectContent>
-                          <SelectItem value="JPY">円</SelectItem>
-                          <SelectItem value="USD">ドル</SelectItem>
+                          <SelectItem value="JPY">¥</SelectItem>
+                          <SelectItem value="USD">$</SelectItem>
                         </SelectContent>
                       </Select>
                     )}
+                  />
+                  <Input
+                    id="price-amount"
+                    type="number"
+                    step="1"
+                    className="flex-1 rounded-none border-0 bg-transparent px-0 focus-visible:ring-0 dark:bg-transparent"
+                    {...register("amount", { valueAsNumber: true })}
                   />
                 </div>
                 {errors.amount && <p className="text-sm text-destructive">{errors.amount.message}</p>}
