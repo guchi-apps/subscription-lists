@@ -13,7 +13,7 @@ import {
   type ContractStatus,
 } from "@/lib/billing";
 import { cn } from "@/lib/utils";
-import { ContractStatusBadge } from "@/components/SubscriptionList";
+import { ContractStatusBadge } from "@/components/ContractStatusBadge";
 import {
   Dialog,
   DialogContent,

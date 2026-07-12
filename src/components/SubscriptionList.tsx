@@ -28,21 +28,20 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 import { Card, CardContent } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import {
-  CONTRACT_STATUS_LABEL,
   CURRENCY_LABEL,
   convertToJpy,
   getContractStatus,
   getCurrentPrice,
   getMonthlyAmount,
   getNextOccurrence,
-  type ContractStatus,
   type Currency,
 } from "@/lib/billing";
 import { cn } from "@/lib/utils";
+import { ContractStatusBadge } from "@/components/ContractStatusBadge";
+import { SubscriptionDetailDialog } from "@/components/SubscriptionDetailDialog";
 import type { SubscriptionDTO } from "@/types";
 
 function MonthlyJpyAmount({
@@ -75,23 +74,6 @@ function MonthlyJpyAmount({
   );
 }
 
-export function ContractStatusBadge({ status }: { status: ContractStatus }) {
-  if (status === "AUTO_RENEWING") {
-    return <Badge variant="secondary">{CONTRACT_STATUS_LABEL[status]}</Badge>;
-  }
-  if (status === "SCHEDULED_TO_END") {
-    return (
-      <Badge
-        variant="outline"
-        className="border-amber-500/40 bg-amber-500/10 text-amber-600 dark:text-amber-400"
-      >
-        {CONTRACT_STATUS_LABEL[status]}
-      </Badge>
-    );
-  }
-  return <Badge variant="outline">{CONTRACT_STATUS_LABEL[status]}</Badge>;
-}
-
 function toRow(sub: SubscriptionDTO) {
   const priceChanges = sub.priceChanges.map((p) => ({
     ...p,
@@ -118,6 +100,7 @@ export function SubscriptionList({
   const router = useRouter();
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const [includeEnded, setIncludeEnded] = useState(false);
+  const [selectedId, setSelectedId] = useState<string | null>(null);
 
   const rows = useMemo(() => {
     return subscriptions
@@ -130,6 +113,8 @@ export function SubscriptionList({
         return a.sub.name.localeCompare(b.sub.name, "ja");
       });
   }, [subscriptions, includeEnded]);
+
+  const selectedRow = rows.find((row) => row.sub.id === selectedId) ?? null;
 
   async function handleDelete(id: string) {
     setDeletingId(id);
@@ -181,7 +166,11 @@ export function SubscriptionList({
               </TableHeader>
               <TableBody>
                 {rows.map(({ sub, status, currentPrice, nextOccurrence }) => (
-                  <TableRow key={sub.id} className={status === "ENDED" ? "opacity-50" : undefined}>
+                  <TableRow
+                    key={sub.id}
+                    className={cn("cursor-pointer", status === "ENDED" && "opacity-50")}
+                    onClick={() => setSelectedId(sub.id)}
+                  >
                     <TableCell className="font-medium">
                       <div className="flex items-center gap-2">
                         {sub.name}
@@ -199,7 +188,7 @@ export function SubscriptionList({
                       {nextOccurrence ? format(nextOccurrence.date, "yyyy年MM月dd日") : "-"}
                     </TableCell>
                     <TableCell>
-                      <div className="flex justify-end gap-1">
+                      <div className="flex justify-end gap-1" onClick={(e) => e.stopPropagation()}>
                         <Button asChild variant="ghost" size="icon">
                           <Link href={`/subscriptions/${sub.id}/edit`}>
                             <Pencil className="size-4" />
@@ -219,7 +208,11 @@ export function SubscriptionList({
 
           <div className="space-y-2 md:hidden">
             {rows.map(({ sub, status, currentPrice, nextOccurrence }) => (
-              <Card key={sub.id} className={cn(status === "ENDED" && "opacity-50")}>
+              <Card
+                key={sub.id}
+                className={cn("cursor-pointer", status === "ENDED" && "opacity-50")}
+                onClick={() => setSelectedId(sub.id)}
+              >
                 <CardContent className="flex items-center justify-between gap-2">
                   <div>
                     <p className="flex items-center gap-2 font-medium">
@@ -239,7 +232,7 @@ export function SubscriptionList({
                       {nextOccurrence ? format(nextOccurrence.date, "yyyy年MM月dd日") : "-"}
                     </p>
                   </div>
-                  <div className="flex gap-1">
+                  <div className="flex gap-1" onClick={(e) => e.stopPropagation()}>
                     <Button asChild variant="ghost" size="icon">
                       <Link href={`/subscriptions/${sub.id}/edit`}>
                         <Pencil className="size-4" />
@@ -256,6 +249,17 @@ export function SubscriptionList({
           </div>
         </>
       )}
+
+      <SubscriptionDetailDialog
+        subscription={selectedRow?.sub ?? null}
+        status={selectedRow?.status ?? "AUTO_RENEWING"}
+        nextOccurrence={selectedRow?.nextOccurrence ?? null}
+        usdJpyRate={usdJpyRate}
+        open={selectedId !== null}
+        onOpenChange={(open) => {
+          if (!open) setSelectedId(null);
+        }}
+      />
     </div>
   );
 }
