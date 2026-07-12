@@ -8,6 +8,8 @@ import { z } from "zod";
 import { format } from "date-fns";
 import { toast } from "sonner";
 
+import { Loader2, Plus } from "lucide-react";
+
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -19,6 +21,13 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
 import type { MasterDTO, SubscriptionDTO } from "@/types";
 
 const formSchema = z
@@ -48,19 +57,27 @@ const newSubscriptionSchema = formSchema.refine((data) => data.amount !== undefi
 
 type SubscriptionFormValues = z.infer<typeof formSchema>;
 
+const newPaymentMethodSchema = z.object({
+  name: z.string().min(1, "支払い方法名は必須です").max(50),
+});
+type NewPaymentMethodValues = z.infer<typeof newPaymentMethodSchema>;
+
 function toDateInputValue(iso: string): string {
   return format(new Date(iso), "yyyy-MM-dd");
 }
 
 export function SubscriptionForm({
   subscription,
-  paymentMethods,
+  paymentMethods: initialPaymentMethods,
 }: {
   subscription?: SubscriptionDTO;
   paymentMethods: MasterDTO[];
 }) {
   const router = useRouter();
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [paymentMethods, setPaymentMethods] = useState(initialPaymentMethods);
+  const [addDialogOpen, setAddDialogOpen] = useState(false);
+  const [isAddingPaymentMethod, setIsAddingPaymentMethod] = useState(false);
   const isEdit = !!subscription;
 
   const {
@@ -68,6 +85,7 @@ export function SubscriptionForm({
     register,
     handleSubmit,
     watch,
+    setValue,
     formState: { errors },
   } = useForm<SubscriptionFormValues>({
     resolver: zodResolver(
@@ -91,6 +109,39 @@ export function SubscriptionForm({
   });
 
   const billingCycle = watch("billingCycle");
+
+  const {
+    register: registerNewPaymentMethod,
+    handleSubmit: handleSubmitNewPaymentMethod,
+    reset: resetNewPaymentMethod,
+    formState: { errors: newPaymentMethodErrors },
+  } = useForm<NewPaymentMethodValues>({
+    resolver: zodResolver(newPaymentMethodSchema),
+    defaultValues: { name: "" },
+  });
+
+  async function onSubmitNewPaymentMethod(values: NewPaymentMethodValues) {
+    setIsAddingPaymentMethod(true);
+    try {
+      const res = await fetch("/api/payment-methods", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(values),
+      });
+      if (!res.ok) {
+        toast.error("支払い方法の追加に失敗しました");
+        return;
+      }
+      const created: MasterDTO = await res.json();
+      setPaymentMethods((prev) => [...prev, created]);
+      setValue("paymentMethodId", created.id);
+      toast.success("支払い方法を追加しました");
+      resetNewPaymentMethod();
+      setAddDialogOpen(false);
+    } finally {
+      setIsAddingPaymentMethod(false);
+    }
+  }
 
   async function onSubmit(values: SubscriptionFormValues) {
     setIsSubmitting(true);
@@ -244,7 +295,49 @@ export function SubscriptionForm({
       )}
 
       <div className="space-y-1.5">
-        <Label htmlFor="paymentMethodId">支払い方法</Label>
+        <div className="flex items-center justify-between">
+          <Label htmlFor="paymentMethodId">支払い方法</Label>
+          <Dialog
+            open={addDialogOpen}
+            onOpenChange={(open) => {
+              setAddDialogOpen(open);
+              if (!open) resetNewPaymentMethod();
+            }}
+          >
+            <DialogTrigger asChild>
+              <button
+                type="button"
+                className="inline-flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground"
+              >
+                <Plus className="size-3.5" />
+                新しく追加
+              </button>
+            </DialogTrigger>
+            <DialogContent>
+              <DialogHeader>
+                <DialogTitle>支払い方法を追加</DialogTitle>
+              </DialogHeader>
+              <form
+                onSubmit={handleSubmitNewPaymentMethod(onSubmitNewPaymentMethod)}
+                className="space-y-4"
+              >
+                <div className="space-y-1.5">
+                  <Label htmlFor="newPaymentMethodName">名称</Label>
+                  <Input id="newPaymentMethodName" {...registerNewPaymentMethod("name")} />
+                  {newPaymentMethodErrors.name && (
+                    <p className="text-sm text-destructive">
+                      {newPaymentMethodErrors.name.message}
+                    </p>
+                  )}
+                </div>
+                <Button type="submit" className="w-full" disabled={isAddingPaymentMethod}>
+                  {isAddingPaymentMethod && <Loader2 className="size-4 animate-spin" />}
+                  追加する
+                </Button>
+              </form>
+            </DialogContent>
+          </Dialog>
+        </div>
         <Controller
           control={control}
           name="paymentMethodId"
@@ -267,7 +360,9 @@ export function SubscriptionForm({
           <p className="text-sm text-destructive">{errors.paymentMethodId.message}</p>
         )}
         {paymentMethods.length === 0 && (
-          <p className="text-xs text-muted-foreground">設定画面から支払い方法を登録してください。</p>
+          <p className="text-xs text-muted-foreground">
+            まだ支払い方法が登録されていません。「新しく追加」から登録してください。
+          </p>
         )}
       </div>
 
