@@ -21,7 +21,7 @@ export async function notifySignalyLogin(params: {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
-        embeds: [{ title: "🔐 subscribe-lists にログイン", color: 5763719, fields }],
+        embeds: [{ title: "🔐 subscription-lists にログイン", color: 5763719, fields }],
       }),
     });
   } catch (error) {

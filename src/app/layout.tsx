@@ -4,11 +4,11 @@ import { Toaster } from "@/components/ui/sonner";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "subscribe-lists",
+  title: "subscription-lists",
   description: "サブスク契約管理アプリ",
   appleWebApp: {
     capable: true,
-    title: "subscribe-lists",
+    title: "subscription-lists",
     statusBarStyle: "default",
   },
 };

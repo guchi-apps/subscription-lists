@@ -1,6 +1,6 @@
-import Link from "next/link";
-import { ArrowRight, CalendarDays, Wallet } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import { CalendarDays, Wallet } from "lucide-react";
+import { signInWithGoogleAction } from "@/app/actions/auth";
+import { HomeSignInButton } from "./home-signin-button";
 
 export default function Home() {
   return (
@@ -14,17 +14,14 @@ export default function Home() {
         <Wallet className="size-7" />
       </span>
 
-      <h1 className="text-4xl font-semibold tracking-tight sm:text-5xl">subscribe-lists</h1>
+      <h1 className="text-4xl font-semibold tracking-tight sm:text-5xl">subscription-lists</h1>
       <p className="mt-4 max-w-md text-balance text-muted-foreground">
         サブスクの契約状況をまとめて管理。Googleアカウントでログインして始めましょう。
       </p>
 
-      <Button asChild size="lg" className="mt-8 rounded-full px-6">
-        <Link href="/auth/signin">
-          Googleでログイン
-          <ArrowRight className="size-4" />
-        </Link>
-      </Button>
+      <form action={signInWithGoogleAction.bind(null, undefined)}>
+        <HomeSignInButton />
+      </form>
 
       <div className="mt-16 flex items-center gap-2 text-xs text-muted-foreground">
         <CalendarDays className="size-4" />

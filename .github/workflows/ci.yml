@@ -94,7 +94,7 @@ jobs:
         if: steps.status.outputs.should_notify == 'true'
         env:
           SIGNALY_WEBHOOK_URL: ${{ env.SIGNALY_WEBHOOK_URL }}
-          NOTIFY_APP: subscribe-lists
+          NOTIFY_APP: subscription-lists
           NOTIFY_KIND: CI
           NOTIFY_STATUS: ${{ steps.status.outputs.result }}
           NOTIFY_JOB: ${{ steps.status.outputs.jobs }}

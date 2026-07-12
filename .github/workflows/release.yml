@@ -56,7 +56,7 @@ jobs:
         env:
           SIGNALY_WEBHOOK_URL: ${{ env.SIGNALY_WEBHOOK_URL }}
           NOTIFY_STATUS: ${{ needs.release.result }}
-          NOTIFY_APP: subscribe-lists
+          NOTIFY_APP: subscription-lists
           NOTIFY_KIND: リリース
           NOTIFY_VERSION: ${{ github.ref_name }}
         run: bash .github/scripts/signaly-notify.sh

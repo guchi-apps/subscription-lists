@@ -7,7 +7,7 @@ on:
   workflow_dispatch:
 
 concurrency:
-  group: deploy-subscribe-lists-production
+  group: deploy-subscription-lists-production
   cancel-in-progress: true
 
 jobs:
@@ -298,7 +298,7 @@ jobs:
       - name: Signaly に通知
         env:
           SIGNALY_WEBHOOK_URL: ${{ env.SIGNALY_WEBHOOK_URL }}
-          NOTIFY_APP: subscribe-lists
+          NOTIFY_APP: subscription-lists
           NOTIFY_KIND: デプロイ
           NOTIFY_STATUS: ${{ steps.status.outputs.result }}
         run: bash .github/scripts/signaly-notify.sh
@@ -324,7 +324,7 @@ jobs:
         env:
           SIGNALY_WEBHOOK_URL: ${{ env.SIGNALY_WEBHOOK_URL }}
           NOTIFY_STATUS: ${{ needs.release.result }}
-          NOTIFY_APP: subscribe-lists
+          NOTIFY_APP: subscription-lists
           NOTIFY_KIND: リリース
           NOTIFY_VERSION: ${{ needs.tag.outputs.tag }}
         run: bash .github/scripts/signaly-notify.sh
