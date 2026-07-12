@@ -73,10 +73,10 @@ function MonthlyJpyAmount({
   }
   return (
     <span className="inline-flex items-baseline gap-1">
-      <span className="text-base font-semibold">約{Math.round(jpy).toLocaleString()}円</span>
       <span className="text-xs text-muted-foreground">
-        ({amount.toLocaleString()} {CURRENCY_LABEL[currency]})
+        {amount.toLocaleString()} {CURRENCY_LABEL[currency]} /
       </span>
+      <span className="text-base font-semibold">約{Math.round(jpy).toLocaleString()}円</span>
     </span>
   );
 }
@@ -206,7 +206,7 @@ export function SubscriptionList({
                 <TableRow>
                   <TableHead>サブスク名</TableHead>
                   <TableHead className="text-right">月当たり</TableHead>
-                  <TableHead>次回の更新日</TableHead>
+                  <TableHead className="pl-6">次回の更新日</TableHead>
                   <TableHead className="w-24" />
                 </TableRow>
               </TableHeader>
@@ -230,7 +230,7 @@ export function SubscriptionList({
                         usdJpyRate={usdJpyRate}
                       />
                     </TableCell>
-                    <TableCell>
+                    <TableCell className="pl-6">
                       {nextOccurrence ? format(nextOccurrence.date, "yyyy年MM月dd日") : "-"}
                     </TableCell>
                     <TableCell>
