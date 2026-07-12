@@ -2,7 +2,7 @@ import type { MetadataRoute } from "next";
 
 export default function manifest(): MetadataRoute.Manifest {
   return {
-    name: "subscribe-lists",
+    name: "subscription-lists",
     short_name: "サブスク管理",
     description: "サブスク契約管理アプリ",
     start_url: "/subscriptions",

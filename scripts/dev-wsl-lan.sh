@@ -76,7 +76,7 @@ is_cloudflare_tunnel_running() {
   pgrep -f "cloudflared .*tunnel run signaly-dev" >/dev/null 2>&1
 }
 
-# signaly-dev は複数アプリ(asset-manager, subscribe-lists 等)で共有している
+# signaly-dev は複数アプリ(asset-manager, subscription-lists 等)で共有している
 # Named Tunnel。他アプリの dev.sh から既に起動済みなら何もしない。
 ensure_cloudflare_tunnel() {
   if ! command -v cloudflared >/dev/null 2>&1; then

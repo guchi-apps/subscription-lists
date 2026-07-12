@@ -27,7 +27,7 @@ export function Navigation() {
           <span className="flex size-7 items-center justify-center rounded-md bg-primary text-primary-foreground">
             <Wallet className="size-4" />
           </span>
-          subscribe-lists
+          subscription-lists
         </Link>
         <nav className="flex items-center gap-1">
           {navItems.map(({ href, label, icon: Icon }) => {
