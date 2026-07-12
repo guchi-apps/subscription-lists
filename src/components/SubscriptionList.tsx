@@ -29,6 +29,13 @@ import {
 } from "@/components/ui/alert-dialog";
 import { Card, CardContent } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
 import {
   CURRENCY_LABEL,
@@ -74,7 +81,15 @@ function MonthlyJpyAmount({
   );
 }
 
-function toRow(sub: SubscriptionDTO) {
+type SortKey = "nextOccurrence" | "monthlyAmountDesc" | "name";
+
+const SORT_LABEL: Record<SortKey, string> = {
+  nextOccurrence: "次回の更新日が近い順",
+  monthlyAmountDesc: "金額が高い順（月あたりの金額）",
+  name: "名前順",
+};
+
+function toRow(sub: SubscriptionDTO, usdJpyRate: number | null) {
   const priceChanges = sub.priceChanges.map((p) => ({
     ...p,
     amount: Number(p.amount),
@@ -87,7 +102,9 @@ function toRow(sub: SubscriptionDTO) {
   const currentPrice = getCurrentPrice(priceChanges, referenceDate);
   const nextOccurrence =
     status === "ENDED" ? null : getNextOccurrence({ startDate, endDate, priceChanges });
-  return { sub, status, currentPrice, nextOccurrence };
+  const monthlyAmount = getMonthlyAmount(currentPrice);
+  const monthlyJpyAmount = convertToJpy(monthlyAmount, currentPrice.currency, usdJpyRate) ?? monthlyAmount;
+  return { sub, status, currentPrice, nextOccurrence, monthlyJpyAmount };
 }
 
 export function SubscriptionList({
@@ -101,18 +118,28 @@ export function SubscriptionList({
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const [includeEnded, setIncludeEnded] = useState(false);
   const [selectedId, setSelectedId] = useState<string | null>(null);
+  const [sortKey, setSortKey] = useState<SortKey>("name");
 
   const rows = useMemo(() => {
     return subscriptions
-      .map(toRow)
+      .map((sub) => toRow(sub, usdJpyRate))
       .filter(({ status }) => includeEnded || status !== "ENDED")
       .sort((a, b) => {
         if ((a.status === "ENDED") !== (b.status === "ENDED")) {
           return a.status === "ENDED" ? 1 : -1;
         }
+        if (sortKey === "nextOccurrence") {
+          if (!a.nextOccurrence || !b.nextOccurrence) {
+            return a.nextOccurrence ? -1 : b.nextOccurrence ? 1 : 0;
+          }
+          return a.nextOccurrence.date.getTime() - b.nextOccurrence.date.getTime();
+        }
+        if (sortKey === "monthlyAmountDesc") {
+          return b.monthlyJpyAmount - a.monthlyJpyAmount;
+        }
         return a.sub.name.localeCompare(b.sub.name, "ja");
       });
-  }, [subscriptions, includeEnded]);
+  }, [subscriptions, includeEnded, sortKey, usdJpyRate]);
 
   const selectedRow = rows.find((row) => row.sub.id === selectedId) ?? null;
 
@@ -133,12 +160,31 @@ export function SubscriptionList({
 
   return (
     <div className="space-y-4">
-      <div className="flex items-center justify-between gap-2">
-        <div className="flex items-center gap-2">
-          <Switch id="include-ended" checked={includeEnded} onCheckedChange={setIncludeEnded} />
-          <Label htmlFor="include-ended" className="text-sm font-normal">
-            解約済みも表示する
-          </Label>
+      <div className="flex flex-wrap items-center justify-between gap-2">
+        <div className="flex flex-wrap items-center gap-4">
+          <div className="flex items-center gap-2">
+            <Switch id="include-ended" checked={includeEnded} onCheckedChange={setIncludeEnded} />
+            <Label htmlFor="include-ended" className="text-sm font-normal">
+              解約済みも表示する
+            </Label>
+          </div>
+          <div className="flex items-center gap-2">
+            <Label htmlFor="sort-key" className="text-sm font-normal text-muted-foreground">
+              並び替え
+            </Label>
+            <Select value={sortKey} onValueChange={(value) => setSortKey(value as SortKey)}>
+              <SelectTrigger id="sort-key" size="sm">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {(Object.keys(SORT_LABEL) as SortKey[]).map((key) => (
+                  <SelectItem key={key} value={key}>
+                    {SORT_LABEL[key]}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
         </div>
         <Button asChild>
           <Link href="/subscriptions/new">
