@@ -35,6 +35,7 @@ export async function POST(request: Request) {
       priceChanges: {
         create: {
           amount: price.amount,
+          currency: price.currency,
           billingCycle: price.billingCycle,
           billingDay: price.billingDay,
           billingMonth: price.billingCycle === "YEARLY" ? price.billingMonth : null,

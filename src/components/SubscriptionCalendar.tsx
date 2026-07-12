@@ -6,7 +6,7 @@ import { format, parse, startOfWeek, getDay, addMonths, subMonths } from "date-f
 import { ja } from "date-fns/locale";
 import "react-big-calendar/lib/css/react-big-calendar.css";
 
-import { getOccurrencesInMonth, getMonthlyAmount, type BillingCycle } from "@/lib/billing";
+import { convertToJpy, getOccurrencesInMonth, getMonthlyAmount, type BillingCycle, type Currency } from "@/lib/billing";
 import {
   Dialog,
   DialogContent,
@@ -15,6 +15,8 @@ import {
   DialogDescription,
 } from "@/components/ui/dialog";
 import type { SubscriptionDTO } from "@/types";
+
+const CURRENCY_LABEL: Record<Currency, string> = { JPY: "円", USD: "ドル" };
 
 const localizer = dateFnsLocalizer({
   format,
@@ -33,10 +35,17 @@ type CalendarEvent = {
   allDay: true;
   subscription: SubscriptionDTO;
   amount: number;
+  currency: Currency;
   billingCycle: BillingCycle;
 };
 
-export function SubscriptionCalendar({ subscriptions }: { subscriptions: SubscriptionDTO[] }) {
+export function SubscriptionCalendar({
+  subscriptions,
+  usdJpyRate,
+}: {
+  subscriptions: SubscriptionDTO[];
+  usdJpyRate: number | null;
+}) {
   const [date, setDate] = useState(new Date());
   const [selected, setSelected] = useState<CalendarEvent | null>(null);
 
@@ -61,13 +70,15 @@ export function SubscriptionCalendar({ subscriptions }: { subscriptions: Subscri
           month.getMonth() + 1
         );
         for (const occurrence of occurrences) {
+          const symbol = occurrence.currency === "USD" ? "$" : "¥";
           result.push({
-            title: `${sub.name} ¥${occurrence.amount.toLocaleString()}`,
+            title: `${sub.name} ${symbol}${occurrence.amount.toLocaleString()}`,
             start: occurrence.date,
             end: occurrence.date,
             allDay: true,
             subscription: sub,
             amount: occurrence.amount,
+            currency: occurrence.currency,
             billingCycle: occurrence.billingCycle,
           });
         }
@@ -106,11 +117,16 @@ export function SubscriptionCalendar({ subscriptions }: { subscriptions: Subscri
               <DialogHeader>
                 <DialogTitle>{selected.subscription.name}</DialogTitle>
                 <DialogDescription>
-                  {selected.amount.toLocaleString()} 円 / 月あたり{" "}
+                  {selected.amount.toLocaleString()} {CURRENCY_LABEL[selected.currency]} / 月あたり{" "}
                   {Math.round(
                     getMonthlyAmount({ amount: selected.amount, billingCycle: selected.billingCycle })
                   ).toLocaleString()}{" "}
-                  円
+                  {CURRENCY_LABEL[selected.currency]}
+                  {selected.currency === "USD" &&
+                    (() => {
+                      const jpy = convertToJpy(selected.amount, selected.currency, usdJpyRate);
+                      return jpy !== null ? ` (約${Math.round(jpy).toLocaleString()}円)` : "";
+                    })()}
                 </DialogDescription>
               </DialogHeader>
               <div className="space-y-1 text-sm text-muted-foreground">

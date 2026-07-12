@@ -40,6 +40,7 @@ export async function POST(request: Request, { params }: Params) {
     data: {
       subscriptionId: id,
       amount: parsed.data.amount,
+      currency: parsed.data.currency,
       billingCycle: parsed.data.billingCycle,
       billingDay: parsed.data.billingDay,
       billingMonth: parsed.data.billingCycle === "YEARLY" ? parsed.data.billingMonth : null,

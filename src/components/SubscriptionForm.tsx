@@ -29,6 +29,7 @@ const formSchema = z
     endDate: z.string().optional(),
     memo: z.string().optional(),
     amount: z.number().positive("金額は0より大きい数値が必須です").optional(),
+    currency: z.enum(["JPY", "USD"]).optional(),
     billingCycle: z.enum(["MONTHLY", "YEARLY"]).optional(),
     billingDay: z.number().int().min(1, "1〜31で入力してください").max(31, "1〜31で入力してください").optional(),
     billingMonth: z.number().int().min(1).max(12).optional(),
@@ -80,6 +81,7 @@ export function SubscriptionForm({
       endDate: subscription?.endDate ? toDateInputValue(subscription.endDate) : "",
       memo: subscription?.memo ?? "",
       amount: undefined,
+      currency: "JPY",
       billingCycle: "MONTHLY",
       billingDay: 1,
       billingMonth: undefined,
@@ -105,6 +107,7 @@ export function SubscriptionForm({
             ...basePayload,
             price: {
               amount: values.amount,
+              currency: values.currency,
               billingCycle: values.billingCycle,
               billingDay: values.billingDay,
               billingMonth: values.billingMonth,
@@ -143,10 +146,30 @@ export function SubscriptionForm({
 
       {!isEdit && (
         <>
-          <div className="space-y-1.5">
-            <Label htmlFor="amount">金額(円)</Label>
-            <Input id="amount" type="number" step="1" {...register("amount", { valueAsNumber: true })} />
-            {errors.amount && <p className="text-sm text-destructive">{errors.amount.message}</p>}
+          <div className="grid grid-cols-[1fr_auto] gap-4">
+            <div className="space-y-1.5">
+              <Label htmlFor="amount">金額</Label>
+              <Input id="amount" type="number" step="1" {...register("amount", { valueAsNumber: true })} />
+              {errors.amount && <p className="text-sm text-destructive">{errors.amount.message}</p>}
+            </div>
+            <div className="space-y-1.5">
+              <Label htmlFor="currency">通貨</Label>
+              <Controller
+                control={control}
+                name="currency"
+                render={({ field }) => (
+                  <Select value={field.value} onValueChange={field.onChange}>
+                    <SelectTrigger id="currency" className="w-24">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="JPY">円</SelectItem>
+                      <SelectItem value="USD">ドル</SelectItem>
+                    </SelectContent>
+                  </Select>
+                )}
+              />
+            </div>
           </div>
 
           <div className="space-y-1.5">

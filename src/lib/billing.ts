@@ -1,15 +1,22 @@
 import { endOfMonth, isBefore, startOfDay } from "date-fns";
 
 export type BillingCycle = "MONTHLY" | "YEARLY";
+export type Currency = "JPY" | "USD";
 
 export interface BillingInfo {
   amount: number;
   billingCycle: BillingCycle;
 }
 
-/** 月当たりの金額。年次は amount/billingCycle から都度計算する */
+/** 月当たりの金額。年次は amount/billingCycle から都度計算する(通貨は変換しない) */
 export function getMonthlyAmount({ amount, billingCycle }: BillingInfo): number {
   return billingCycle === "YEARLY" ? amount / 12 : amount;
+}
+
+/** 指定した通貨の金額を USD/JPY レートで日本円に換算する。JPY はそのまま、レート未取得時は null */
+export function convertToJpy(amount: number, currency: Currency, usdJpyRate: number | null): number | null {
+  if (currency === "JPY") return amount;
+  return usdJpyRate === null ? null : amount * usdJpyRate;
 }
 
 export function formatBillingDay({
@@ -56,6 +63,7 @@ export function getContractStatus(endDate: Date | null, today: Date = new Date()
 
 export interface PriceChangeInput {
   amount: number;
+  currency: Currency;
   billingCycle: BillingCycle;
   billingDay: number;
   billingMonth?: number | null;
@@ -92,6 +100,7 @@ export interface SubscriptionOccurrenceInput {
 export interface Occurrence {
   date: Date;
   amount: number;
+  currency: Currency;
   billingCycle: BillingCycle;
 }
 
@@ -127,7 +136,12 @@ export function getOccurrencesInMonth(
     if (periodEnd && !isBefore(occurrence, periodEnd)) return;
     if (end && isBefore(end, occurrence)) return;
 
-    result.push({ date: occurrence, amount: priceChange.amount, billingCycle: priceChange.billingCycle });
+    result.push({
+      date: occurrence,
+      amount: priceChange.amount,
+      currency: priceChange.currency,
+      billingCycle: priceChange.billingCycle,
+    });
   });
 
   return result;

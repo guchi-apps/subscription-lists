@@ -27,12 +27,15 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import { Card, CardContent } from "@/components/ui/card";
-import { formatBillingDay, getMonthlyAmount } from "@/lib/billing";
+import { convertToJpy, formatBillingDay, getMonthlyAmount } from "@/lib/billing";
 import type { SubscriptionPriceDTO } from "@/types";
+
+const CURRENCY_LABEL: Record<"JPY" | "USD", string> = { JPY: "円", USD: "ドル" };
 
 const priceFormSchema = z
   .object({
     amount: z.number().positive("金額は0より大きい数値が必須です"),
+    currency: z.enum(["JPY", "USD"]),
     billingCycle: z.enum(["MONTHLY", "YEARLY"]),
     billingDay: z.number().int().min(1, "1〜31で入力してください").max(31, "1〜31で入力してください"),
     billingMonth: z.number().int().min(1).max(12).optional(),
@@ -51,9 +54,11 @@ function toDateInputValue(iso: string): string {
 export function PriceHistoryManager({
   subscriptionId,
   priceChanges: initialPriceChanges,
+  usdJpyRate,
 }: {
   subscriptionId: string;
   priceChanges: SubscriptionPriceDTO[];
+  usdJpyRate: number | null;
 }) {
   const router = useRouter();
   const [priceChanges, setPriceChanges] = useState(
@@ -76,6 +81,7 @@ export function PriceHistoryManager({
     resolver: zodResolver(priceFormSchema),
     defaultValues: {
       amount: undefined,
+      currency: "JPY",
       billingCycle: "MONTHLY",
       billingDay: 1,
       billingMonth: undefined,
@@ -88,6 +94,7 @@ export function PriceHistoryManager({
     setEditing(null);
     reset({
       amount: undefined,
+      currency: "JPY",
       billingCycle: "MONTHLY",
       billingDay: 1,
       billingMonth: undefined,
@@ -100,6 +107,7 @@ export function PriceHistoryManager({
     setEditing(priceChange);
     reset({
       amount: Number(priceChange.amount),
+      currency: priceChange.currency,
       billingCycle: priceChange.billingCycle,
       billingDay: priceChange.billingDay,
       billingMonth: priceChange.billingMonth ?? undefined,
@@ -130,6 +138,7 @@ export function PriceHistoryManager({
   async function onSubmit(values: PriceFormValues) {
     const payload = {
       amount: values.amount,
+      currency: values.currency,
       billingCycle: values.billingCycle,
       billingDay: values.billingDay,
       billingMonth: values.billingCycle === "YEARLY" ? values.billingMonth : undefined,
@@ -186,15 +195,35 @@ export function PriceHistoryManager({
               <DialogTitle>{editing ? "料金を編集" : "料金変更を追加"}</DialogTitle>
             </DialogHeader>
             <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-              <div className="space-y-1.5">
-                <Label htmlFor="price-amount">金額(円)</Label>
-                <Input
-                  id="price-amount"
-                  type="number"
-                  step="1"
-                  {...register("amount", { valueAsNumber: true })}
-                />
-                {errors.amount && <p className="text-sm text-destructive">{errors.amount.message}</p>}
+              <div className="grid grid-cols-[1fr_auto] gap-4">
+                <div className="space-y-1.5">
+                  <Label htmlFor="price-amount">金額</Label>
+                  <Input
+                    id="price-amount"
+                    type="number"
+                    step="1"
+                    {...register("amount", { valueAsNumber: true })}
+                  />
+                  {errors.amount && <p className="text-sm text-destructive">{errors.amount.message}</p>}
+                </div>
+                <div className="space-y-1.5">
+                  <Label htmlFor="price-currency">通貨</Label>
+                  <Controller
+                    control={control}
+                    name="currency"
+                    render={({ field }) => (
+                      <Select value={field.value} onValueChange={field.onChange}>
+                        <SelectTrigger id="price-currency" className="w-24">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="JPY">円</SelectItem>
+                          <SelectItem value="USD">ドル</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    )}
+                  />
+                </div>
               </div>
               <div className="space-y-1.5">
                 <Label htmlFor="price-billingCycle">支払い周期</Label>
@@ -266,12 +295,18 @@ export function PriceHistoryManager({
             <CardContent className="flex items-center gap-3">
               <div className="flex-1">
                 <p className="font-medium">
-                  {Number(priceChange.amount).toLocaleString()} 円
+                  {Number(priceChange.amount).toLocaleString()} {CURRENCY_LABEL[priceChange.currency]}
                   <span className="ml-2 text-sm font-normal text-muted-foreground">
                     (月あたり {Math.round(getMonthlyAmount({
                       amount: Number(priceChange.amount),
                       billingCycle: priceChange.billingCycle,
-                    })).toLocaleString()} 円)
+                    })).toLocaleString()} {CURRENCY_LABEL[priceChange.currency]}
+                    {priceChange.currency === "USD" &&
+                      (() => {
+                        const jpy = convertToJpy(Number(priceChange.amount), priceChange.currency, usdJpyRate);
+                        return jpy !== null ? ` / 約${Math.round(jpy).toLocaleString()}円` : "";
+                      })()}
+                    )
                   </span>
                 </p>
                 <p className="text-sm text-muted-foreground">

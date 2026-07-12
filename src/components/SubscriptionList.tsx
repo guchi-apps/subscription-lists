@@ -31,6 +31,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import {
   CONTRACT_STATUS_LABEL,
+  convertToJpy,
   formatBillingDay,
   getContractStatus,
   getCurrentPrice,
@@ -39,6 +40,15 @@ import {
 } from "@/lib/billing";
 import { cn } from "@/lib/utils";
 import type { SubscriptionDTO } from "@/types";
+
+const CURRENCY_LABEL: Record<"JPY" | "USD", string> = { JPY: "円", USD: "ドル" };
+
+function formatAmountWithJpy(amount: number, currency: "JPY" | "USD", usdJpyRate: number | null) {
+  const base = `${amount.toLocaleString()} ${CURRENCY_LABEL[currency]}`;
+  if (currency === "JPY") return base;
+  const jpy = convertToJpy(amount, currency, usdJpyRate);
+  return jpy !== null ? `${base} (約${Math.round(jpy).toLocaleString()}円)` : base;
+}
 
 function ContractStatusBadge({ status }: { status: ContractStatus }) {
   if (status === "AUTO_RENEWING") {
@@ -70,7 +80,13 @@ function toRow(sub: SubscriptionDTO) {
   return { sub, status, currentPrice };
 }
 
-export function SubscriptionList({ subscriptions }: { subscriptions: SubscriptionDTO[] }) {
+export function SubscriptionList({
+  subscriptions,
+  usdJpyRate,
+}: {
+  subscriptions: SubscriptionDTO[];
+  usdJpyRate: number | null;
+}) {
   const router = useRouter();
   const [deletingId, setDeletingId] = useState<string | null>(null);
 
@@ -134,10 +150,14 @@ export function SubscriptionList({ subscriptions }: { subscriptions: Subscriptio
                   <TableRow key={sub.id} className={status === "ENDED" ? "opacity-50" : undefined}>
                     <TableCell className="font-medium">{sub.name}</TableCell>
                     <TableCell className="text-right">
-                      {currentPrice.amount.toLocaleString()} 円
+                      {formatAmountWithJpy(currentPrice.amount, currentPrice.currency, usdJpyRate)}
                     </TableCell>
                     <TableCell className="text-right">
-                      {Math.round(getMonthlyAmount(currentPrice)).toLocaleString()} 円
+                      {formatAmountWithJpy(
+                        Math.round(getMonthlyAmount(currentPrice)),
+                        currentPrice.currency,
+                        usdJpyRate
+                      )}
                     </TableCell>
                     <TableCell>{formatBillingDay(currentPrice)}</TableCell>
                     <TableCell>{sub.paymentMethod.name}</TableCell>
@@ -174,9 +194,13 @@ export function SubscriptionList({ subscriptions }: { subscriptions: Subscriptio
                       <ContractStatusBadge status={status} />
                     </p>
                     <p className="text-sm text-muted-foreground">
-                      {currentPrice.amount.toLocaleString()} 円 ({formatBillingDay(currentPrice)}) / 月あたり
-                      {" "}
-                      {Math.round(getMonthlyAmount(currentPrice)).toLocaleString()} 円
+                      {formatAmountWithJpy(currentPrice.amount, currentPrice.currency, usdJpyRate)} (
+                      {formatBillingDay(currentPrice)}) / 月あたり{" "}
+                      {formatAmountWithJpy(
+                        Math.round(getMonthlyAmount(currentPrice)),
+                        currentPrice.currency,
+                        usdJpyRate
+                      )}
                     </p>
                     <p className="text-xs text-muted-foreground">{sub.paymentMethod.name}</p>
                   </div>

@@ -67,6 +67,11 @@ enum BillingCycle {
   YEARLY
 }
 
+enum Currency {
+  JPY
+  USD
+}
+
 model PaymentMethod {
   id           String   @id @default(cuid())
   userId       String
@@ -114,6 +119,7 @@ model SubscriptionPrice {
   subscription   Subscription @relation(fields: [subscriptionId], references: [id], onDelete: Cascade)
 
   amount       Decimal      @db.Decimal(10, 2) // 1回あたりの請求額
+  currency     Currency     @default(JPY) // amount の通貨
   billingCycle BillingCycle @default(MONTHLY)
   billingDay   Int // 支払日(1-31)
   billingMonth Int? // YEARLY のときのみ使用(1-12)

@@ -2,11 +2,13 @@
 // （Decimal.js の toJSON 実装のため）。クライアント側では Number() で変換して使う。
 
 export type BillingCycle = "MONTHLY" | "YEARLY";
+export type Currency = "JPY" | "USD";
 
 export type SubscriptionPriceDTO = {
   id: string;
   subscriptionId: string;
   amount: string;
+  currency: Currency;
   billingCycle: BillingCycle;
   billingDay: number;
   billingMonth: number | null;

@@ -2,6 +2,7 @@ import { notFound, redirect } from "next/navigation";
 
 import { auth } from "@/auth";
 import { db } from "@/lib/db";
+import { getUsdJpyRate } from "@/lib/exchange-rate";
 import { SubscriptionForm } from "@/components/SubscriptionForm";
 import { PriceHistoryManager } from "@/components/PriceHistoryManager";
 import type { MasterDTO, SubscriptionDTO } from "@/types";
@@ -16,12 +17,13 @@ export default async function EditSubscriptionPage({
   if (!userId) redirect("/auth/signin");
 
   const { id } = await params;
-  const [subscription, paymentMethods] = await Promise.all([
+  const [subscription, paymentMethods, usdJpyRate] = await Promise.all([
     db.subscription.findFirst({
       where: { id, userId },
       include: { paymentMethod: true, priceChanges: { orderBy: { effectiveFrom: "asc" } } },
     }),
     db.paymentMethod.findMany({ where: { userId, isActive: true }, orderBy: { displayOrder: "asc" } }),
+    getUsdJpyRate(),
   ]);
   if (!subscription) notFound();
 
@@ -39,6 +41,7 @@ export default async function EditSubscriptionPage({
       <PriceHistoryManager
         subscriptionId={subscriptionDto.id}
         priceChanges={subscriptionDto.priceChanges}
+        usdJpyRate={usdJpyRate}
       />
     </div>
   );
