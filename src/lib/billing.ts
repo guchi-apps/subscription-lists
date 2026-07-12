@@ -187,3 +187,27 @@ export function getOccurrencesInMonth(
 
   return result;
 }
+
+/** 指定日以降で最も近い支払い予定日を返す(見つからない場合はnull。最大3年先まで探索) */
+export function getNextOccurrence(
+  sub: SubscriptionOccurrenceInput,
+  referenceDate: Date = new Date()
+): Occurrence | null {
+  const ref = startOfDay(referenceDate);
+  let year = ref.getFullYear();
+  let month = ref.getMonth() + 1;
+
+  for (let i = 0; i < 36; i++) {
+    const occurrences = getOccurrencesInMonth(sub, year, month)
+      .filter((o) => !isBefore(o.date, ref))
+      .sort((a, b) => a.date.getTime() - b.date.getTime());
+    if (occurrences.length > 0) return occurrences[0];
+
+    month += 1;
+    if (month > 12) {
+      month = 1;
+      year += 1;
+    }
+  }
+  return null;
+}

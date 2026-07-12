@@ -35,11 +35,10 @@ import {
   CONTRACT_STATUS_LABEL,
   CURRENCY_LABEL,
   convertToJpy,
-  formatAmountWithJpy,
-  formatBillingDay,
   getContractStatus,
   getCurrentPrice,
   getMonthlyAmount,
+  getNextOccurrence,
   type ContractStatus,
   type Currency,
 } from "@/lib/billing";
@@ -99,11 +98,14 @@ function toRow(sub: SubscriptionDTO) {
     amount: Number(p.amount),
     effectiveFrom: new Date(p.effectiveFrom),
   }));
+  const startDate = new Date(sub.startDate);
   const endDate = sub.endDate ? new Date(sub.endDate) : null;
   const status = getContractStatus(endDate);
   const referenceDate = status === "ENDED" && endDate ? endDate : new Date();
   const currentPrice = getCurrentPrice(priceChanges, referenceDate);
-  return { sub, status, currentPrice };
+  const nextOccurrence =
+    status === "ENDED" ? null : getNextOccurrence({ startDate, endDate, priceChanges });
+  return { sub, status, currentPrice, nextOccurrence };
 }
 
 export function SubscriptionList({
@@ -172,21 +174,19 @@ export function SubscriptionList({
               <TableHeader>
                 <TableRow>
                   <TableHead>サブスク名</TableHead>
-                  <TableHead className="text-right">金額</TableHead>
                   <TableHead className="text-right">月当たり</TableHead>
-                  <TableHead>支払い日</TableHead>
-                  <TableHead>支払い方法</TableHead>
-                  <TableHead>契約状況</TableHead>
-                  <TableHead>契約開始日</TableHead>
+                  <TableHead>次回の更新日</TableHead>
                   <TableHead className="w-24" />
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {rows.map(({ sub, status, currentPrice }) => (
+                {rows.map(({ sub, status, currentPrice, nextOccurrence }) => (
                   <TableRow key={sub.id} className={status === "ENDED" ? "opacity-50" : undefined}>
-                    <TableCell className="font-medium">{sub.name}</TableCell>
-                    <TableCell className="text-right">
-                      {formatAmountWithJpy(currentPrice.amount, currentPrice.currency, usdJpyRate)}
+                    <TableCell className="font-medium">
+                      <div className="flex items-center gap-2">
+                        {sub.name}
+                        <ContractStatusBadge status={status} />
+                      </div>
                     </TableCell>
                     <TableCell className="text-right">
                       <MonthlyJpyAmount
@@ -195,12 +195,9 @@ export function SubscriptionList({
                         usdJpyRate={usdJpyRate}
                       />
                     </TableCell>
-                    <TableCell>{formatBillingDay(currentPrice)}</TableCell>
-                    <TableCell>{sub.paymentMethod.name}</TableCell>
                     <TableCell>
-                      <ContractStatusBadge status={status} />
+                      {nextOccurrence ? format(nextOccurrence.date, "yyyy年MM月dd日") : "-"}
                     </TableCell>
-                    <TableCell>{format(new Date(sub.startDate), "yyyy年MM月dd日")}</TableCell>
                     <TableCell>
                       <div className="flex justify-end gap-1">
                         <Button asChild variant="ghost" size="icon">
@@ -221,17 +218,13 @@ export function SubscriptionList({
           </div>
 
           <div className="space-y-2 md:hidden">
-            {rows.map(({ sub, status, currentPrice }) => (
+            {rows.map(({ sub, status, currentPrice, nextOccurrence }) => (
               <Card key={sub.id} className={cn(status === "ENDED" && "opacity-50")}>
                 <CardContent className="flex items-center justify-between gap-2">
                   <div>
                     <p className="flex items-center gap-2 font-medium">
                       {sub.name}
                       <ContractStatusBadge status={status} />
-                    </p>
-                    <p className="text-sm text-muted-foreground">
-                      {formatAmountWithJpy(currentPrice.amount, currentPrice.currency, usdJpyRate)} (
-                      {formatBillingDay(currentPrice)})
                     </p>
                     <p className="text-sm text-muted-foreground">
                       月あたり{" "}
@@ -241,7 +234,10 @@ export function SubscriptionList({
                         usdJpyRate={usdJpyRate}
                       />
                     </p>
-                    <p className="text-xs text-muted-foreground">{sub.paymentMethod.name}</p>
+                    <p className="text-xs text-muted-foreground">
+                      次回の更新日:{" "}
+                      {nextOccurrence ? format(nextOccurrence.date, "yyyy年MM月dd日") : "-"}
+                    </p>
                   </div>
                   <div className="flex gap-1">
                     <Button asChild variant="ghost" size="icon">
