@@ -8,8 +8,8 @@ export async function GET() {
 
   const subscriptions = await db.subscription.findMany({
     where: { userId },
-    include: { paymentMethod: true, contractMethod: true },
-    orderBy: [{ isActive: "desc" }, { name: "asc" }],
+    include: { paymentMethod: true, priceChanges: { orderBy: { effectiveFrom: "asc" } } },
+    orderBy: [{ name: "asc" }],
   });
   return Response.json(subscriptions);
 }
@@ -24,17 +24,25 @@ export async function POST(request: Request) {
     return Response.json({ error: parsed.error.flatten() }, { status: 400 });
   }
 
-  const { startDate, cancelledAt, billingMonth, ...rest } = parsed.data;
+  const { startDate, endDate, price, ...rest } = parsed.data;
 
   const subscription = await db.subscription.create({
     data: {
       userId,
       ...rest,
-      billingMonth: rest.billingCycle === "YEARLY" ? billingMonth : null,
       startDate: new Date(startDate),
-      cancelledAt: cancelledAt ? new Date(cancelledAt) : null,
+      endDate: endDate ? new Date(endDate) : null,
+      priceChanges: {
+        create: {
+          amount: price.amount,
+          billingCycle: price.billingCycle,
+          billingDay: price.billingDay,
+          billingMonth: price.billingCycle === "YEARLY" ? price.billingMonth : null,
+          effectiveFrom: new Date(startDate),
+        },
+      },
     },
-    include: { paymentMethod: true, contractMethod: true },
+    include: { paymentMethod: true, priceChanges: { orderBy: { effectiveFrom: "asc" } } },
   });
   return Response.json(subscription, { status: 201 });
 }

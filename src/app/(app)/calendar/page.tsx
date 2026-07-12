@@ -11,8 +11,8 @@ export default async function CalendarPage() {
   if (!userId) redirect("/auth/signin");
 
   const subscriptions = await db.subscription.findMany({
-    where: { userId, isActive: true },
-    include: { paymentMethod: true, contractMethod: true },
+    where: { userId },
+    include: { paymentMethod: true, priceChanges: { orderBy: { effectiveFrom: "asc" } } },
   });
   const subscriptionDtos = JSON.parse(JSON.stringify(subscriptions)) as SubscriptionDTO[];
 

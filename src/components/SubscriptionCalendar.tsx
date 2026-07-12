@@ -6,7 +6,7 @@ import { format, parse, startOfWeek, getDay, addMonths, subMonths } from "date-f
 import { ja } from "date-fns/locale";
 import "react-big-calendar/lib/css/react-big-calendar.css";
 
-import { getOccurrencesInMonth, getMonthlyAmount } from "@/lib/billing";
+import { getOccurrencesInMonth, getMonthlyAmount, type BillingCycle } from "@/lib/billing";
 import {
   Dialog,
   DialogContent,
@@ -32,37 +32,43 @@ type CalendarEvent = {
   end: Date;
   allDay: true;
   subscription: SubscriptionDTO;
+  amount: number;
+  billingCycle: BillingCycle;
 };
 
 export function SubscriptionCalendar({ subscriptions }: { subscriptions: SubscriptionDTO[] }) {
   const [date, setDate] = useState(new Date());
-  const [selected, setSelected] = useState<SubscriptionDTO | null>(null);
+  const [selected, setSelected] = useState<CalendarEvent | null>(null);
 
   const events = useMemo<CalendarEvent[]>(() => {
     // 月表示は前後の月の日付もグリッドに含まれるため、3ヶ月分をまとめて計算する
     const months = [subMonths(date, 1), date, addMonths(date, 1)];
     const result: CalendarEvent[] = [];
     for (const sub of subscriptions) {
-      if (!sub.isActive) continue;
+      const priceChanges = sub.priceChanges.map((p) => ({
+        ...p,
+        amount: Number(p.amount),
+        effectiveFrom: new Date(p.effectiveFrom),
+      }));
       for (const month of months) {
         const occurrences = getOccurrencesInMonth(
           {
-            billingCycle: sub.billingCycle,
-            billingDay: sub.billingDay,
-            billingMonth: sub.billingMonth,
             startDate: new Date(sub.startDate),
-            cancelledAt: sub.cancelledAt ? new Date(sub.cancelledAt) : null,
+            endDate: sub.endDate ? new Date(sub.endDate) : null,
+            priceChanges,
           },
           month.getFullYear(),
           month.getMonth() + 1
         );
         for (const occurrence of occurrences) {
           result.push({
-            title: `${sub.name} ¥${Number(sub.amount).toLocaleString()}`,
-            start: occurrence,
-            end: occurrence,
+            title: `${sub.name} ¥${occurrence.amount.toLocaleString()}`,
+            start: occurrence.date,
+            end: occurrence.date,
             allDay: true,
             subscription: sub,
+            amount: occurrence.amount,
+            billingCycle: occurrence.billingCycle,
           });
         }
       }
@@ -75,6 +81,7 @@ export function SubscriptionCalendar({ subscriptions }: { subscriptions: Subscri
       <div className="h-[70vh] rounded-xl bg-card p-2 ring-1 ring-foreground/10">
         <Calendar
           localizer={localizer}
+          culture="ja"
           events={events}
           date={date}
           onNavigate={setDate}
@@ -88,7 +95,7 @@ export function SubscriptionCalendar({ subscriptions }: { subscriptions: Subscri
             noEventsInRange: "支払い予定はありません",
             showMore: (count) => `他 ${count} 件`,
           }}
-          onSelectEvent={(event) => setSelected((event as CalendarEvent).subscription)}
+          onSelectEvent={(event) => setSelected(event as CalendarEvent)}
         />
       </div>
 
@@ -97,21 +104,17 @@ export function SubscriptionCalendar({ subscriptions }: { subscriptions: Subscri
           {selected && (
             <>
               <DialogHeader>
-                <DialogTitle>{selected.name}</DialogTitle>
+                <DialogTitle>{selected.subscription.name}</DialogTitle>
                 <DialogDescription>
-                  {Number(selected.amount).toLocaleString()} 円 / 月あたり{" "}
+                  {selected.amount.toLocaleString()} 円 / 月あたり{" "}
                   {Math.round(
-                    getMonthlyAmount({
-                      amount: Number(selected.amount),
-                      billingCycle: selected.billingCycle,
-                    })
+                    getMonthlyAmount({ amount: selected.amount, billingCycle: selected.billingCycle })
                   ).toLocaleString()}{" "}
                   円
                 </DialogDescription>
               </DialogHeader>
               <div className="space-y-1 text-sm text-muted-foreground">
-                <p>支払い方法: {selected.paymentMethod.name}</p>
-                <p>契約方法: {selected.contractMethod.name}</p>
+                <p>支払い方法: {selected.subscription.paymentMethod.name}</p>
               </div>
             </>
           )}

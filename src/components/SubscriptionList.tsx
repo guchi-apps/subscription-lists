@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { format } from "date-fns";
 import { Loader2, Pencil, Plus, Trash2 } from "lucide-react";
 import { toast } from "sonner";
@@ -29,12 +29,61 @@ import {
 } from "@/components/ui/alert-dialog";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { formatBillingDay, getMonthlyAmount } from "@/lib/billing";
+import {
+  CONTRACT_STATUS_LABEL,
+  formatBillingDay,
+  getContractStatus,
+  getCurrentPrice,
+  getMonthlyAmount,
+  type ContractStatus,
+} from "@/lib/billing";
+import { cn } from "@/lib/utils";
 import type { SubscriptionDTO } from "@/types";
+
+function ContractStatusBadge({ status }: { status: ContractStatus }) {
+  if (status === "AUTO_RENEWING") {
+    return <Badge variant="secondary">{CONTRACT_STATUS_LABEL[status]}</Badge>;
+  }
+  if (status === "SCHEDULED_TO_END") {
+    return (
+      <Badge
+        variant="outline"
+        className="border-amber-500/40 bg-amber-500/10 text-amber-600 dark:text-amber-400"
+      >
+        {CONTRACT_STATUS_LABEL[status]}
+      </Badge>
+    );
+  }
+  return <Badge variant="outline">{CONTRACT_STATUS_LABEL[status]}</Badge>;
+}
+
+function toRow(sub: SubscriptionDTO) {
+  const priceChanges = sub.priceChanges.map((p) => ({
+    ...p,
+    amount: Number(p.amount),
+    effectiveFrom: new Date(p.effectiveFrom),
+  }));
+  const endDate = sub.endDate ? new Date(sub.endDate) : null;
+  const status = getContractStatus(endDate);
+  const referenceDate = status === "ENDED" && endDate ? endDate : new Date();
+  const currentPrice = getCurrentPrice(priceChanges, referenceDate);
+  return { sub, status, currentPrice };
+}
 
 export function SubscriptionList({ subscriptions }: { subscriptions: SubscriptionDTO[] }) {
   const router = useRouter();
   const [deletingId, setDeletingId] = useState<string | null>(null);
+
+  const rows = useMemo(() => {
+    return subscriptions
+      .map(toRow)
+      .sort((a, b) => {
+        if ((a.status === "ENDED") !== (b.status === "ENDED")) {
+          return a.status === "ENDED" ? 1 : -1;
+        }
+        return a.sub.name.localeCompare(b.sub.name, "ja");
+      });
+  }, [subscriptions]);
 
   async function handleDelete(id: string) {
     setDeletingId(id);
@@ -62,7 +111,7 @@ export function SubscriptionList({ subscriptions }: { subscriptions: Subscriptio
         </Button>
       </div>
 
-      {subscriptions.length === 0 ? (
+      {rows.length === 0 ? (
         <p className="text-sm text-muted-foreground">まだサブスクが登録されていません。</p>
       ) : (
         <>
@@ -75,37 +124,26 @@ export function SubscriptionList({ subscriptions }: { subscriptions: Subscriptio
                   <TableHead className="text-right">月当たり</TableHead>
                   <TableHead>支払い日</TableHead>
                   <TableHead>支払い方法</TableHead>
-                  <TableHead>契約方法</TableHead>
+                  <TableHead>契約状況</TableHead>
                   <TableHead>契約開始日</TableHead>
                   <TableHead className="w-24" />
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {subscriptions.map((sub) => (
-                  <TableRow key={sub.id} className={!sub.isActive ? "opacity-50" : undefined}>
-                    <TableCell>
-                      <span className="font-medium">{sub.name}</span>
-                      {!sub.isActive && (
-                        <Badge variant="outline" className="ml-2">
-                          解約済み
-                        </Badge>
-                      )}
+                {rows.map(({ sub, status, currentPrice }) => (
+                  <TableRow key={sub.id} className={status === "ENDED" ? "opacity-50" : undefined}>
+                    <TableCell className="font-medium">{sub.name}</TableCell>
+                    <TableCell className="text-right">
+                      {currentPrice.amount.toLocaleString()} 円
                     </TableCell>
                     <TableCell className="text-right">
-                      {Number(sub.amount).toLocaleString()} 円
+                      {Math.round(getMonthlyAmount(currentPrice)).toLocaleString()} 円
                     </TableCell>
-                    <TableCell className="text-right">
-                      {Math.round(getMonthlyAmount({ amount: Number(sub.amount), billingCycle: sub.billingCycle })).toLocaleString()} 円
-                    </TableCell>
-                    <TableCell>
-                      {formatBillingDay({
-                        billingCycle: sub.billingCycle,
-                        billingDay: sub.billingDay,
-                        billingMonth: sub.billingMonth,
-                      })}
-                    </TableCell>
+                    <TableCell>{formatBillingDay(currentPrice)}</TableCell>
                     <TableCell>{sub.paymentMethod.name}</TableCell>
-                    <TableCell>{sub.contractMethod.name}</TableCell>
+                    <TableCell>
+                      <ContractStatusBadge status={status} />
+                    </TableCell>
                     <TableCell>{format(new Date(sub.startDate), "yyyy年MM月dd日")}</TableCell>
                     <TableCell>
                       <div className="flex justify-end gap-1">
@@ -127,32 +165,20 @@ export function SubscriptionList({ subscriptions }: { subscriptions: Subscriptio
           </div>
 
           <div className="space-y-2 md:hidden">
-            {subscriptions.map((sub) => (
-              <Card key={sub.id} className={!sub.isActive ? "opacity-50" : undefined}>
+            {rows.map(({ sub, status, currentPrice }) => (
+              <Card key={sub.id} className={cn(status === "ENDED" && "opacity-50")}>
                 <CardContent className="flex items-center justify-between gap-2">
                   <div>
-                    <p className="font-medium">
+                    <p className="flex items-center gap-2 font-medium">
                       {sub.name}
-                      {!sub.isActive && (
-                        <Badge variant="outline" className="ml-2">
-                          解約済み
-                        </Badge>
-                      )}
+                      <ContractStatusBadge status={status} />
                     </p>
                     <p className="text-sm text-muted-foreground">
-                      {Number(sub.amount).toLocaleString()} 円 (
-                      {formatBillingDay({
-                        billingCycle: sub.billingCycle,
-                        billingDay: sub.billingDay,
-                        billingMonth: sub.billingMonth,
-                      })}
-                      ) / 月あたり
+                      {currentPrice.amount.toLocaleString()} 円 ({formatBillingDay(currentPrice)}) / 月あたり
                       {" "}
-                      {Math.round(getMonthlyAmount({ amount: Number(sub.amount), billingCycle: sub.billingCycle })).toLocaleString()} 円
+                      {Math.round(getMonthlyAmount(currentPrice)).toLocaleString()} 円
                     </p>
-                    <p className="text-xs text-muted-foreground">
-                      {sub.paymentMethod.name} / {sub.contractMethod.name}
-                    </p>
+                    <p className="text-xs text-muted-foreground">{sub.paymentMethod.name}</p>
                   </div>
                   <div className="flex gap-1">
                     <Button asChild variant="ghost" size="icon">

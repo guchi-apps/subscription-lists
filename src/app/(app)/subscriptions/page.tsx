@@ -12,8 +12,8 @@ export default async function SubscriptionsPage() {
 
   const subscriptions = await db.subscription.findMany({
     where: { userId },
-    include: { paymentMethod: true, contractMethod: true },
-    orderBy: [{ isActive: "desc" }, { name: "asc" }],
+    include: { paymentMethod: true, priceChanges: { orderBy: { effectiveFrom: "asc" } } },
+    orderBy: [{ name: "asc" }],
   });
   const subscriptionDtos = JSON.parse(JSON.stringify(subscriptions)) as SubscriptionDTO[];
 

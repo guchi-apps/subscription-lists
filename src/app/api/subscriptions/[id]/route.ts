@@ -4,6 +4,20 @@ import { UpdateSubscriptionSchema } from "@/lib/validators";
 
 type Params = { params: Promise<{ id: string }> };
 
+export async function GET(_request: Request, { params }: Params) {
+  const userId = await requireUserId();
+  if (!userId) return Response.json({ error: "Unauthorized" }, { status: 401 });
+
+  const { id } = await params;
+  const subscription = await db.subscription.findFirst({
+    where: { id, userId },
+    include: { paymentMethod: true, priceChanges: { orderBy: { effectiveFrom: "asc" } } },
+  });
+  if (!subscription) return Response.json({ error: "Not Found" }, { status: 404 });
+
+  return Response.json(subscription);
+}
+
 export async function PUT(request: Request, { params }: Params) {
   const userId = await requireUserId();
   if (!userId) return Response.json({ error: "Unauthorized" }, { status: 401 });
@@ -18,23 +32,16 @@ export async function PUT(request: Request, { params }: Params) {
   const existing = await db.subscription.findFirst({ where: { id, userId } });
   if (!existing) return Response.json({ error: "Not Found" }, { status: 404 });
 
-  const { startDate, cancelledAt, billingMonth, billingCycle, ...rest } = parsed.data;
-  const nextBillingCycle = billingCycle ?? existing.billingCycle;
+  const { startDate, endDate, ...rest } = parsed.data;
 
   const subscription = await db.subscription.update({
     where: { id },
     data: {
       ...rest,
-      ...(billingCycle && { billingCycle }),
-      ...(billingMonth !== undefined && {
-        billingMonth: nextBillingCycle === "YEARLY" ? billingMonth : null,
-      }),
       ...(startDate && { startDate: new Date(startDate) }),
-      ...(cancelledAt !== undefined && {
-        cancelledAt: cancelledAt ? new Date(cancelledAt) : null,
-      }),
+      ...(endDate !== undefined && { endDate: endDate ? new Date(endDate) : null }),
     },
-    include: { paymentMethod: true, contractMethod: true },
+    include: { paymentMethod: true, priceChanges: { orderBy: { effectiveFrom: "asc" } } },
   });
   return Response.json(subscription);
 }

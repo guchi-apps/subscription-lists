@@ -6,10 +6,10 @@ export default async function SettingsPage() {
   const userId = await requireUserId();
   if (!userId) return null;
 
-  const [paymentMethods, contractMethods] = await Promise.all([
-    db.paymentMethod.findMany({ where: { userId }, orderBy: { displayOrder: "asc" } }),
-    db.contractMethod.findMany({ where: { userId }, orderBy: { displayOrder: "asc" } }),
-  ]);
+  const paymentMethods = await db.paymentMethod.findMany({
+    where: { userId },
+    orderBy: { displayOrder: "asc" },
+  });
 
   return (
     <div className="mx-auto max-w-2xl space-y-8">
@@ -19,12 +19,6 @@ export default async function SettingsPage() {
         addLabel="支払い方法を追加"
         apiBasePath="/api/payment-methods"
         initialItems={JSON.parse(JSON.stringify(paymentMethods))}
-      />
-      <MasterManager
-        title="契約方法"
-        addLabel="契約方法を追加"
-        apiBasePath="/api/contract-methods"
-        initialItems={JSON.parse(JSON.stringify(contractMethods))}
       />
     </div>
   );

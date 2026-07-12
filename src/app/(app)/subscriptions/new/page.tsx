@@ -10,18 +10,15 @@ export default async function NewSubscriptionPage() {
   const userId = session?.user?.id;
   if (!userId) redirect("/auth/signin");
 
-  const [paymentMethods, contractMethods] = await Promise.all([
-    db.paymentMethod.findMany({ where: { userId, isActive: true }, orderBy: { displayOrder: "asc" } }),
-    db.contractMethod.findMany({ where: { userId, isActive: true }, orderBy: { displayOrder: "asc" } }),
-  ]);
+  const paymentMethods = await db.paymentMethod.findMany({
+    where: { userId, isActive: true },
+    orderBy: { displayOrder: "asc" },
+  });
 
   return (
     <div className="space-y-4">
       <h1 className="text-2xl font-semibold">サブスクを登録</h1>
-      <SubscriptionForm
-        paymentMethods={JSON.parse(JSON.stringify(paymentMethods)) as MasterDTO[]}
-        contractMethods={JSON.parse(JSON.stringify(contractMethods)) as MasterDTO[]}
-      />
+      <SubscriptionForm paymentMethods={JSON.parse(JSON.stringify(paymentMethods)) as MasterDTO[]} />
     </div>
   );
 }

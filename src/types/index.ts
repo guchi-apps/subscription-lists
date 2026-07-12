@@ -3,24 +3,30 @@
 
 export type BillingCycle = "MONTHLY" | "YEARLY";
 
-export type SubscriptionDTO = {
+export type SubscriptionPriceDTO = {
   id: string;
-  userId: string;
-  name: string;
+  subscriptionId: string;
   amount: string;
   billingCycle: BillingCycle;
   billingDay: number;
   billingMonth: number | null;
-  paymentMethodId: string;
-  paymentMethod: MasterDTO;
-  contractMethodId: string;
-  contractMethod: MasterDTO;
-  startDate: string;
-  cancelledAt: string | null;
-  memo: string | null;
-  isActive: boolean;
+  effectiveFrom: string;
   createdAt: string;
   updatedAt: string;
+};
+
+export type SubscriptionDTO = {
+  id: string;
+  userId: string;
+  name: string;
+  paymentMethodId: string;
+  paymentMethod: MasterDTO;
+  startDate: string;
+  endDate: string | null;
+  memo: string | null;
+  createdAt: string;
+  updatedAt: string;
+  priceChanges: SubscriptionPriceDTO[];
 };
 
 export type MasterDTO = {
