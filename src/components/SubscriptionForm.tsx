@@ -37,7 +37,7 @@ const formSchema = z
     startDate: z.string().min(1, "契約開始日は必須です"),
     endDate: z.string().optional(),
     memo: z.string().optional(),
-    amount: z.number().positive("金額は0より大きい数値が必須です").optional(),
+    amount: z.number().nonnegative("金額は0以上の数値を入力してください").optional(),
     currency: z.enum(["JPY", "USD"]).optional(),
     billingCycle: z.enum(["MONTHLY", "YEARLY"]).optional(),
     billingInterval: z.number().int().min(1, "1以上の整数を入力してください").optional(),
@@ -51,7 +51,7 @@ const formSchema = z
 
 // 新規登録時のみ amount/billingCycle/billingDay を必須にする
 const newSubscriptionSchema = formSchema.refine((data) => data.amount !== undefined, {
-  message: "金額は0より大きい数値が必須です",
+  message: "金額は必須です",
   path: ["amount"],
 });
 

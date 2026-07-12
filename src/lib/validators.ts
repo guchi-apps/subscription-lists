@@ -5,7 +5,7 @@ export const CurrencyEnum = z.enum(["JPY", "USD"]);
 
 const priceFieldsSchema = z
   .object({
-    amount: z.number().positive("金額は0より大きい数値が必須です"),
+    amount: z.number().nonnegative("金額は0以上の数値を入力してください"),
     currency: CurrencyEnum.default("JPY"),
     billingCycle: BillingCycleEnum,
     billingInterval: z.number().int().min(1, "1以上の整数を入力してください").default(1),
@@ -46,7 +46,7 @@ export type CreatePriceChange = z.infer<typeof CreatePriceChangeSchema>;
 
 export const UpdatePriceChangeSchema = z
   .object({
-    amount: z.number().positive().optional(),
+    amount: z.number().nonnegative().optional(),
     currency: CurrencyEnum.optional(),
     billingCycle: BillingCycleEnum.optional(),
     billingInterval: z.number().int().min(1, "1以上の整数を入力してください").optional(),

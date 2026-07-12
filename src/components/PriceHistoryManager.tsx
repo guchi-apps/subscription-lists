@@ -35,7 +35,7 @@ const CURRENCY_LABEL: Record<"JPY" | "USD", string> = { JPY: "円", USD: "ドル
 
 const priceFormSchema = z
   .object({
-    amount: z.number().positive("金額は0より大きい数値が必須です"),
+    amount: z.number().nonnegative("金額は0以上の数値を入力してください"),
     currency: z.enum(["JPY", "USD"]),
     billingCycle: z.enum(["MONTHLY", "YEARLY"]),
     billingInterval: z.number().int().min(1, "1以上の整数を入力してください"),
