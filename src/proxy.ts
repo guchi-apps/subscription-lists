@@ -15,6 +15,17 @@ function isPublicPath(pathname: string): boolean {
 export default auth((req) => {
   applyAuthUrlFromRequest(req.url, req.headers.get("host"), req.headers.get("x-forwarded-proto"));
 
+  // 開発環境で画面確認をしやすくするための一時的な認証バイパス(DISABLE_AUTH=true の間のみ有効)。
+  // 確認が終わったらこの分岐と auth.ts の対応する分岐を削除すること。
+  if (process.env.DISABLE_AUTH === "true") {
+    // バイパス中は常にログイン済み扱いのため、/auth/signin に来た場合も本来の挙動同様に
+    // アプリ側へ戻す(素通りさせるとログイン画面がそのまま表示されてしまう)。
+    if (req.nextUrl.pathname === "/auth/signin") {
+      return NextResponse.redirect(new URL("/subscriptions", req.url));
+    }
+    return NextResponse.next();
+  }
+
   const { pathname } = req.nextUrl;
 
   // /api/* はルートハンドラ自身が requireUserId() で認証チェックし、
