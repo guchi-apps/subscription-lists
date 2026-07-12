@@ -8,6 +8,14 @@ export type ChangelogEntry = {
 
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    version: "0.1.2",
+    date: "2026-07-13",
+    changes: [
+      "トップページのログインボタンから、ワンタップでGoogleログインを開始できるように",
+      "アプリの表示名を「subscription-lists」に変更",
+    ],
+  },
+  {
     version: "0.1.0",
     date: "2026-07-12",
     changes: [
