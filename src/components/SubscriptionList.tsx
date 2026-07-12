@@ -84,8 +84,8 @@ function MonthlyJpyAmount({
 type SortKey = "nextOccurrence" | "monthlyAmountDesc" | "name";
 
 const SORT_LABEL: Record<SortKey, string> = {
-  monthlyAmountDesc: "金額が高い順（月あたりの金額）",
-  nextOccurrence: "次回の更新日が近い順",
+  monthlyAmountDesc: "月あたりの金額順",
+  nextOccurrence: "更新日が近い順",
   name: "名前順",
 };
 
@@ -165,14 +165,8 @@ export function SubscriptionList({
 
   return (
     <div className="space-y-4">
-      <div className="flex flex-wrap items-center justify-end gap-2 sm:gap-4">
-        <Button asChild className="order-2 sm:order-3">
-          <Link href="/subscriptions/new">
-            <Plus className="size-4" />
-            新規登録
-          </Link>
-        </Button>
-        <div className="order-3 flex w-full items-center gap-2 sm:order-2 sm:w-auto">
+      <div className="flex items-center justify-between gap-2 sm:gap-4">
+        <div className="flex items-center gap-2">
           <Label htmlFor="sort-key" className="text-sm font-normal text-muted-foreground">
             並び替え
           </Label>
@@ -189,6 +183,12 @@ export function SubscriptionList({
             </SelectContent>
           </Select>
         </div>
+        <Button asChild>
+          <Link href="/subscriptions/new">
+            <Plus className="size-4" />
+            新規登録
+          </Link>
+        </Button>
       </div>
 
       {rows.length === 0 ? (
