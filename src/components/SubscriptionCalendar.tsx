@@ -1,12 +1,19 @@
 "use client";
 
-import { useMemo, useState } from "react";
-import { Calendar, dateFnsLocalizer, type View } from "react-big-calendar";
-import { format, parse, startOfWeek, getDay, addMonths, subMonths } from "date-fns";
+import { useCallback, useMemo, useState } from "react";
+import { DayPicker, type DayProps } from "react-day-picker";
 import { ja } from "date-fns/locale";
-import "react-big-calendar/lib/css/react-big-calendar.css";
+import { addMonths, format, subMonths } from "date-fns";
+import { ChevronLeft, ChevronRight } from "lucide-react";
 
-import { convertToJpy, getOccurrencesInMonth, getMonthlyAmount, type BillingCycle, type Currency } from "@/lib/billing";
+import { cn } from "@/lib/utils";
+import {
+  convertToJpy,
+  getOccurrencesInMonth,
+  getMonthlyAmount,
+  type BillingCycle,
+  type Currency,
+} from "@/lib/billing";
 import {
   Dialog,
   DialogContent,
@@ -18,27 +25,19 @@ import type { SubscriptionDTO } from "@/types";
 
 const CURRENCY_LABEL: Record<Currency, string> = { JPY: "円", USD: "ドル" };
 
-const localizer = dateFnsLocalizer({
-  format,
-  parse,
-  startOfWeek: () => startOfWeek(new Date(), { locale: ja }),
-  getDay,
-  locales: { ja },
-});
+const MAX_VISIBLE_EVENTS = 3;
 
-const views: View[] = ["month"];
-
-type CalendarEvent = {
-  title: string;
-  start: Date;
-  end: Date;
-  allDay: true;
+type DayEvent = {
   subscription: SubscriptionDTO;
   amount: number;
   currency: Currency;
   billingCycle: BillingCycle;
   billingInterval: number;
 };
+
+function dateKey(date: Date): string {
+  return format(date, "yyyy-MM-dd");
+}
 
 export function SubscriptionCalendar({
   subscriptions,
@@ -47,68 +46,95 @@ export function SubscriptionCalendar({
   subscriptions: SubscriptionDTO[];
   usdJpyRate: number | null;
 }) {
-  const [date, setDate] = useState(new Date());
-  const [selected, setSelected] = useState<CalendarEvent | null>(null);
+  const [month, setMonth] = useState(new Date());
+  const [selected, setSelected] = useState<DayEvent | null>(null);
 
-  const events = useMemo<CalendarEvent[]>(() => {
+  const eventsByDate = useMemo(() => {
     // 月表示は前後の月の日付もグリッドに含まれるため、3ヶ月分をまとめて計算する
-    const months = [subMonths(date, 1), date, addMonths(date, 1)];
-    const result: CalendarEvent[] = [];
+    const months = [subMonths(month, 1), month, addMonths(month, 1)];
+    const map = new Map<string, DayEvent[]>();
     for (const sub of subscriptions) {
       const priceChanges = sub.priceChanges.map((p) => ({
         ...p,
         amount: Number(p.amount),
         effectiveFrom: new Date(p.effectiveFrom),
       }));
-      for (const month of months) {
+      for (const m of months) {
         const occurrences = getOccurrencesInMonth(
           {
             startDate: new Date(sub.startDate),
             endDate: sub.endDate ? new Date(sub.endDate) : null,
             priceChanges,
           },
-          month.getFullYear(),
-          month.getMonth() + 1
+          m.getFullYear(),
+          m.getMonth() + 1
         );
         for (const occurrence of occurrences) {
-          const symbol = occurrence.currency === "USD" ? "$" : "¥";
-          result.push({
-            title: `${sub.name} ${symbol}${occurrence.amount.toLocaleString()}`,
-            start: occurrence.date,
-            end: occurrence.date,
-            allDay: true,
+          const key = dateKey(occurrence.date);
+          const list = map.get(key) ?? [];
+          list.push({
             subscription: sub,
             amount: occurrence.amount,
             currency: occurrence.currency,
             billingCycle: occurrence.billingCycle,
             billingInterval: occurrence.billingInterval,
           });
+          map.set(key, list);
         }
       }
     }
-    return result;
-  }, [subscriptions, date]);
+    return map;
+  }, [subscriptions, month]);
+
+  const renderDay = useCallback(
+    (props: DayProps) => (
+      <CalendarDayCell
+        {...props}
+        events={eventsByDate.get(dateKey(props.day.date)) ?? []}
+        onSelectEvent={setSelected}
+      />
+    ),
+    [eventsByDate]
+  );
 
   return (
     <>
-      <div className="h-[70vh] rounded-xl bg-card p-2 ring-1 ring-foreground/10">
-        <Calendar
-          localizer={localizer}
-          culture="ja"
-          events={events}
-          date={date}
-          onNavigate={setDate}
-          views={views}
-          defaultView="month"
-          style={{ height: "100%" }}
-          messages={{
-            next: "翌月",
-            previous: "前月",
-            today: "今日",
-            noEventsInRange: "支払い予定はありません",
-            showMore: (count) => `他 ${count} 件`,
+      <div className="rounded-2xl border border-border/60 bg-card p-3 shadow-sm sm:p-6">
+        <DayPicker
+          month={month}
+          onMonthChange={setMonth}
+          locale={ja}
+          showOutsideDays
+          fixedWeeks
+          classNames={{
+            root: "w-full",
+            months: "w-full",
+            month: "w-full space-y-4",
+            nav: "flex items-center justify-between",
+            button_previous: cn(
+              "inline-flex size-8 items-center justify-center rounded-full text-muted-foreground",
+              "transition-colors hover:bg-muted hover:text-foreground disabled:pointer-events-none disabled:opacity-40"
+            ),
+            button_next: cn(
+              "inline-flex size-8 items-center justify-center rounded-full text-muted-foreground",
+              "transition-colors hover:bg-muted hover:text-foreground disabled:pointer-events-none disabled:opacity-40"
+            ),
+            month_caption: "flex h-8 items-center justify-center text-base font-semibold tracking-tight",
+            weekdays: "flex",
+            weekday: "min-w-0 flex-1 pb-2 text-center text-[11px] font-medium tracking-wide text-muted-foreground uppercase",
+            month_grid: "w-full border-collapse",
+            week: "flex w-full gap-1 [&+&]:mt-1",
+            day: "min-w-0 flex-1 p-0 align-top",
           }}
-          onSelectEvent={(event) => setSelected(event as CalendarEvent)}
+          components={{
+            Day: renderDay,
+            Chevron: ({ orientation }) =>
+              orientation === "left" ? (
+                <ChevronLeft className="size-4" />
+              ) : (
+                <ChevronRight className="size-4" />
+              ),
+          }}
         />
       </div>
 
@@ -143,5 +169,62 @@ export function SubscriptionCalendar({
         </DialogContent>
       </Dialog>
     </>
+  );
+}
+
+function CalendarDayCell({
+  day,
+  modifiers,
+  events,
+  onSelectEvent,
+  className,
+  ...tdProps
+}: DayProps & {
+  events: DayEvent[];
+  onSelectEvent: (event: DayEvent) => void;
+}) {
+  if (modifiers.hidden) {
+    return <td className={className} {...tdProps} />;
+  }
+
+  const visibleEvents = events.slice(0, MAX_VISIBLE_EVENTS);
+  const hiddenCount = events.length - visibleEvents.length;
+
+  return (
+    <td className={cn("h-24 sm:h-28", className)} {...tdProps}>
+      <div
+        className={cn(
+          "flex h-full w-full flex-col gap-1 overflow-hidden rounded-xl p-1.5 transition-colors",
+          modifiers.outside ? "opacity-40" : "hover:bg-muted/40"
+        )}
+      >
+        <span
+          className={cn(
+            "flex size-6 shrink-0 items-center justify-center rounded-full text-xs",
+            modifiers.today
+              ? "bg-primary font-semibold text-primary-foreground"
+              : "text-muted-foreground"
+          )}
+        >
+          {day.date.getDate()}
+        </span>
+        <div className="flex min-h-0 flex-1 flex-col gap-0.5 overflow-hidden">
+          {visibleEvents.map((event, index) => (
+            <button
+              key={`${event.subscription.id}_${index}`}
+              type="button"
+              onClick={() => onSelectEvent(event)}
+              className="truncate rounded-md bg-primary/10 px-1.5 py-0.5 text-left text-[11px] leading-tight text-primary transition-colors hover:bg-primary/20"
+              title={event.subscription.name}
+            >
+              {event.subscription.name}
+            </button>
+          ))}
+          {hiddenCount > 0 && (
+            <span className="px-1.5 text-[11px] text-muted-foreground">他{hiddenCount}件</span>
+          )}
+        </div>
+      </div>
+    </td>
   );
 }
