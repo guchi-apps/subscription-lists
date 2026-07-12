@@ -160,38 +160,36 @@ export function SubscriptionList({
 
   return (
     <div className="space-y-4">
-      <div className="flex flex-wrap items-center justify-between gap-2">
-        <div className="flex flex-wrap items-center gap-4">
-          <div className="flex items-center gap-2">
-            <Switch id="include-ended" checked={includeEnded} onCheckedChange={setIncludeEnded} />
-            <Label htmlFor="include-ended" className="text-sm font-normal">
-              解約済みも表示する
-            </Label>
-          </div>
-          <div className="flex items-center gap-2">
-            <Label htmlFor="sort-key" className="text-sm font-normal text-muted-foreground">
-              並び替え
-            </Label>
-            <Select value={sortKey} onValueChange={(value) => setSortKey(value as SortKey)}>
-              <SelectTrigger id="sort-key" size="sm">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                {(Object.keys(SORT_LABEL) as SortKey[]).map((key) => (
-                  <SelectItem key={key} value={key}>
-                    {SORT_LABEL[key]}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
+      <div className="flex flex-wrap items-center justify-between gap-2 sm:gap-4">
+        <div className="flex items-center gap-2">
+          <Switch id="include-ended" checked={includeEnded} onCheckedChange={setIncludeEnded} />
+          <Label htmlFor="include-ended" className="text-sm font-normal">
+            解約済みも表示する
+          </Label>
         </div>
-        <Button asChild>
+        <Button asChild className="order-2 sm:order-3">
           <Link href="/subscriptions/new">
             <Plus className="size-4" />
             新規登録
           </Link>
         </Button>
+        <div className="order-3 flex w-full items-center gap-2 sm:order-2 sm:w-auto">
+          <Label htmlFor="sort-key" className="text-sm font-normal text-muted-foreground">
+            並び替え
+          </Label>
+          <Select value={sortKey} onValueChange={(value) => setSortKey(value as SortKey)}>
+            <SelectTrigger id="sort-key" size="sm">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              {(Object.keys(SORT_LABEL) as SortKey[]).map((key) => (
+                <SelectItem key={key} value={key}>
+                  {SORT_LABEL[key]}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
       </div>
 
       {rows.length === 0 ? (
