@@ -7,7 +7,7 @@ import { authConfig } from "@/auth.config";
 import { db } from "@/lib/db";
 import { notifySignalyLogin } from "@/lib/signaly";
 
-export const { handlers, auth, signIn, signOut } = NextAuth({
+const nextAuth = NextAuth({
   ...authConfig,
   adapter: PrismaAdapter(db),
   session: { strategy: "jwt" },
@@ -27,3 +27,15 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
     },
   },
 });
+
+export const { handlers, signIn, signOut } = nextAuth;
+
+// 開発環境で画面確認をしやすくするための一時的な認証バイパス(DISABLE_AUTH=true の間のみ有効)。
+// 確認が終わったら auth.ts のこの分岐と proxy.ts の対応する分岐を削除すること。
+async function devBypassAuth() {
+  const user = await db.user.findFirst();
+  if (!user) return null;
+  return { user: { id: user.id, email: user.email, name: user.name, image: user.image } };
+}
+
+export const auth = process.env.DISABLE_AUTH === "true" ? devBypassAuth : nextAuth.auth;
