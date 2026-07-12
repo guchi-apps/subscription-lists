@@ -12,6 +12,7 @@ import { Loader2, Pencil, Plus, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
 import {
   Select,
   SelectContent,
@@ -41,6 +42,7 @@ const priceFormSchema = z
     billingDay: z.number().int().min(1, "1〜31で入力してください").max(31, "1〜31で入力してください"),
     billingMonth: z.number().int().min(1).max(12).optional(),
     effectiveFrom: z.string().min(1, "適用開始日は必須です"),
+    memo: z.string().optional(),
   })
   .refine((data) => data.billingCycle !== "YEARLY" || data.billingMonth !== undefined, {
     message: "毎年の支払いは支払い月が必須です",
@@ -88,6 +90,7 @@ export function PriceHistoryManager({
       billingDay: 1,
       billingMonth: undefined,
       effectiveFrom: toDateInputValue(new Date().toISOString()),
+      memo: "",
     },
   });
   const billingCycle = watch("billingCycle");
@@ -102,6 +105,7 @@ export function PriceHistoryManager({
       billingDay: 1,
       billingMonth: undefined,
       effectiveFrom: toDateInputValue(new Date().toISOString()),
+      memo: "",
     });
     setDialogOpen(true);
   }
@@ -116,6 +120,7 @@ export function PriceHistoryManager({
       billingDay: priceChange.billingDay,
       billingMonth: priceChange.billingMonth ?? undefined,
       effectiveFrom: toDateInputValue(priceChange.effectiveFrom),
+      memo: priceChange.memo ?? "",
     });
     setDialogOpen(true);
   }
@@ -148,6 +153,7 @@ export function PriceHistoryManager({
       billingDay: values.billingDay,
       billingMonth: values.billingCycle === "YEARLY" ? values.billingMonth : undefined,
       effectiveFrom: new Date(values.effectiveFrom).toISOString(),
+      memo: values.memo || undefined,
     };
 
     const url = editing
@@ -298,6 +304,14 @@ export function PriceHistoryManager({
                   <p className="text-sm text-destructive">{errors.effectiveFrom.message}</p>
                 )}
               </div>
+              <div className="space-y-1.5">
+                <Label htmlFor="price-memo">コメント</Label>
+                <Textarea
+                  id="price-memo"
+                  placeholder="例: 学割適用、プラン変更"
+                  {...register("memo")}
+                />
+              </div>
               <Button type="submit" className="w-full" disabled={isSubmitting}>
                 {isSubmitting && <Loader2 className="size-4 animate-spin" />}
                 {editing ? "更新する" : "追加する"}
@@ -332,6 +346,11 @@ export function PriceHistoryManager({
                   {formatBillingDay(priceChange)} ・ {format(new Date(priceChange.effectiveFrom), "yyyy年MM月dd日")}
                   {index === 0 ? "〜(現在)" : "〜"}
                 </p>
+                {priceChange.memo && (
+                  <p className="mt-1 text-sm whitespace-pre-wrap text-muted-foreground">
+                    {priceChange.memo}
+                  </p>
+                )}
               </div>
               <button
                 type="button"

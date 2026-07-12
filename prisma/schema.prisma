@@ -126,6 +126,7 @@ model SubscriptionPrice {
   billingMonth    Int? // YEARLY のときのみ使用(1-12)
 
   effectiveFrom DateTime @db.Date // この金額が適用され始めた日
+  memo          String?  @db.Text // 変更理由のメモ(例: 学割適用、プラン変更)
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt

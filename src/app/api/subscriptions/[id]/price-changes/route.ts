@@ -46,6 +46,7 @@ export async function POST(request: Request, { params }: Params) {
       billingDay: parsed.data.billingDay,
       billingMonth: parsed.data.billingCycle === "YEARLY" ? parsed.data.billingMonth : null,
       effectiveFrom,
+      memo: parsed.data.memo,
     },
   });
   return Response.json(priceChange, { status: 201 });

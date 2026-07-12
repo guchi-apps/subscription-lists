@@ -41,6 +41,7 @@ export async function POST(request: Request) {
           billingDay: price.billingDay,
           billingMonth: price.billingCycle === "YEARLY" ? price.billingMonth : null,
           effectiveFrom: new Date(startDate),
+          memo: price.memo,
         },
       },
     },

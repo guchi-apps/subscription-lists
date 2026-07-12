@@ -14,6 +14,7 @@ export type SubscriptionPriceDTO = {
   billingDay: number;
   billingMonth: number | null;
   effectiveFrom: string;
+  memo: string | null;
   createdAt: string;
   updatedAt: string;
 };

@@ -110,6 +110,11 @@ export function SubscriptionDetailDialog({
                       {format(new Date(priceChange.effectiveFrom), "yyyy年MM月dd日")}
                       {index === 0 ? "〜(現在)" : "〜"}
                     </p>
+                    {priceChange.memo && (
+                      <p className="mt-1 text-xs whitespace-pre-wrap text-muted-foreground">
+                        {priceChange.memo}
+                      </p>
+                    )}
                   </div>
                 );
               })}

@@ -11,6 +11,7 @@ const priceFieldsSchema = z
     billingInterval: z.number().int().min(1, "1以上の整数を入力してください").default(1),
     billingDay: z.number().int().min(1).max(31),
     billingMonth: z.number().int().min(1).max(12).optional(),
+    memo: z.string().optional(),
   })
   .refine((data) => data.billingCycle !== "YEARLY" || data.billingMonth !== undefined, {
     message: "毎年の支払いは支払い月が必須です",
@@ -52,6 +53,7 @@ export const UpdatePriceChangeSchema = z
     billingDay: z.number().int().min(1).max(31).optional(),
     billingMonth: z.number().int().min(1).max(12).optional().nullable(),
     effectiveFrom: z.string().min(1).optional(),
+    memo: z.string().optional(),
   });
 export type UpdatePriceChange = z.infer<typeof UpdatePriceChangeSchema>;
 
