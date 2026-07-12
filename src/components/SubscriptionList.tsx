@@ -84,8 +84,8 @@ function MonthlyJpyAmount({
 type SortKey = "nextOccurrence" | "monthlyAmountDesc" | "name";
 
 const SORT_LABEL: Record<SortKey, string> = {
-  nextOccurrence: "次回の更新日が近い順",
   monthlyAmountDesc: "金額が高い順（月あたりの金額）",
+  nextOccurrence: "次回の更新日が近い順",
   name: "名前順",
 };
 
@@ -118,7 +118,7 @@ export function SubscriptionList({
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const [includeEnded, setIncludeEnded] = useState(false);
   const [selectedId, setSelectedId] = useState<string | null>(null);
-  const [sortKey, setSortKey] = useState<SortKey>("name");
+  const [sortKey, setSortKey] = useState<SortKey>("monthlyAmountDesc");
 
   const rows = useMemo(() => {
     return subscriptions
