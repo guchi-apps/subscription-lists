@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { toast } from "sonner";
-import { Loader2, Pencil, Plus } from "lucide-react";
+import { ChevronDown, ChevronUp, Loader2, Pencil, Plus } from "lucide-react";
 import { z } from "zod";
 
 import { Button } from "@/components/ui/button";
@@ -43,6 +43,7 @@ export function MasterManager({
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editingItem, setEditingItem] = useState<MasterDTO | null>(null);
   const [togglingId, setTogglingId] = useState<string | null>(null);
+  const [movingId, setMovingId] = useState<string | null>(null);
 
   const {
     register,
@@ -78,6 +79,41 @@ export function MasterManager({
       router.refresh();
     } finally {
       setTogglingId(null);
+    }
+  }
+
+  async function handleMove(index: number, direction: "up" | "down") {
+    const targetIndex = direction === "up" ? index - 1 : index + 1;
+    if (targetIndex < 0 || targetIndex >= items.length) return;
+
+    const current = items[index];
+    const target = items[targetIndex];
+
+    setMovingId(current.id);
+    const reordered = [...items];
+    reordered[index] = { ...target, displayOrder: current.displayOrder };
+    reordered[targetIndex] = { ...current, displayOrder: target.displayOrder };
+    setItems(reordered);
+
+    try {
+      const [res1, res2] = await Promise.all([
+        fetch(`${apiBasePath}/${current.id}`, {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ displayOrder: target.displayOrder }),
+        }),
+        fetch(`${apiBasePath}/${target.id}`, {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ displayOrder: current.displayOrder }),
+        }),
+      ]);
+      if (!res1.ok || !res2.ok) {
+        toast.error("並び替えに失敗しました");
+      }
+      router.refresh();
+    } finally {
+      setMovingId(null);
     }
   }
 
@@ -155,9 +191,29 @@ export function MasterManager({
         <p className="text-sm text-muted-foreground">まだ登録されていません。</p>
       ) : (
         <div className="space-y-2">
-          {items.map((item) => (
+          {items.map((item, index) => (
             <Card key={item.id}>
               <CardContent className="flex items-center gap-3">
+                <div className="flex flex-col">
+                  <button
+                    type="button"
+                    onClick={() => handleMove(index, "up")}
+                    disabled={index === 0 || movingId !== null}
+                    className="text-muted-foreground hover:text-foreground disabled:pointer-events-none disabled:opacity-30"
+                    aria-label="上に移動"
+                  >
+                    <ChevronUp className="size-4" />
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => handleMove(index, "down")}
+                    disabled={index === items.length - 1 || movingId !== null}
+                    className="text-muted-foreground hover:text-foreground disabled:pointer-events-none disabled:opacity-30"
+                    aria-label="下に移動"
+                  >
+                    <ChevronDown className="size-4" />
+                  </button>
+                </div>
                 <p className="flex-1 font-medium">{item.name}</p>
                 <button
                   type="button"
