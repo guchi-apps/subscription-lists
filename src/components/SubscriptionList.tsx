@@ -36,7 +36,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Switch } from "@/components/ui/switch";
 import {
   CURRENCY_LABEL,
   convertToJpy,
@@ -121,10 +120,9 @@ export function SubscriptionList({
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [sortKey, setSortKey] = useState<SortKey>("monthlyAmountDesc");
 
-  const rows = useMemo(() => {
+  const allRows = useMemo(() => {
     return subscriptions
       .map((sub) => toRow(sub, usdJpyRate))
-      .filter(({ status }) => includeEnded || status !== "ENDED")
       .sort((a, b) => {
         if ((a.status === "ENDED") !== (b.status === "ENDED")) {
           return a.status === "ENDED" ? 1 : -1;
@@ -140,7 +138,13 @@ export function SubscriptionList({
         }
         return a.sub.name.localeCompare(b.sub.name, "ja");
       });
-  }, [subscriptions, includeEnded, sortKey, usdJpyRate]);
+  }, [subscriptions, sortKey, usdJpyRate]);
+
+  const rows = useMemo(
+    () => (includeEnded ? allRows : allRows.filter(({ status }) => status !== "ENDED")),
+    [allRows, includeEnded]
+  );
+  const hasHiddenEnded = !includeEnded && rows.length < allRows.length;
 
   const selectedRow = rows.find((row) => row.sub.id === selectedId) ?? null;
 
@@ -161,13 +165,7 @@ export function SubscriptionList({
 
   return (
     <div className="space-y-4">
-      <div className="flex flex-wrap items-center justify-between gap-2 sm:gap-4">
-        <div className="flex items-center gap-2">
-          <Switch id="include-ended" checked={includeEnded} onCheckedChange={setIncludeEnded} />
-          <Label htmlFor="include-ended" className="text-sm font-normal">
-            解約済みも表示する
-          </Label>
-        </div>
+      <div className="flex flex-wrap items-center justify-end gap-2 sm:gap-4">
         <Button asChild className="order-2 sm:order-3">
           <Link href="/subscriptions/new">
             <Plus className="size-4" />
@@ -195,7 +193,7 @@ export function SubscriptionList({
 
       {rows.length === 0 ? (
         <p className="text-sm text-muted-foreground">
-          {includeEnded ? "まだサブスクが登録されていません。" : "現在契約中のサブスクはありません。"}
+          {allRows.length === 0 ? "まだサブスクが登録されていません。" : "現在契約中のサブスクはありません。"}
         </p>
       ) : (
         <>
@@ -299,6 +297,14 @@ export function SubscriptionList({
             ))}
           </div>
         </>
+      )}
+
+      {hasHiddenEnded && (
+        <div className="flex justify-center">
+          <Button variant="outline" onClick={() => setIncludeEnded(true)}>
+            解約済みを表示する
+          </Button>
+        </div>
       )}
 
       <SubscriptionDetailDialog
