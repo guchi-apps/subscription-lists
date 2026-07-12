@@ -13,7 +13,7 @@ function isPublicPath(pathname: string): boolean {
 }
 
 export default auth((req) => {
-  applyAuthUrlFromRequest(req.url, req.headers.get("host"));
+  applyAuthUrlFromRequest(req.url, req.headers.get("host"), req.headers.get("x-forwarded-proto"));
 
   const { pathname } = req.nextUrl;
 
