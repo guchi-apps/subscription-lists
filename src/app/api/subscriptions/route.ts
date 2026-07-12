@@ -37,6 +37,7 @@ export async function POST(request: Request) {
           amount: price.amount,
           currency: price.currency,
           billingCycle: price.billingCycle,
+          billingInterval: price.billingInterval,
           billingDay: price.billingDay,
           billingMonth: price.billingCycle === "YEARLY" ? price.billingMonth : null,
           effectiveFrom: new Date(startDate),

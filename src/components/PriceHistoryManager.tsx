@@ -37,6 +37,7 @@ const priceFormSchema = z
     amount: z.number().positive("金額は0より大きい数値が必須です"),
     currency: z.enum(["JPY", "USD"]),
     billingCycle: z.enum(["MONTHLY", "YEARLY"]),
+    billingInterval: z.number().int().min(1, "1以上の整数を入力してください"),
     billingDay: z.number().int().min(1, "1〜31で入力してください").max(31, "1〜31で入力してください"),
     billingMonth: z.number().int().min(1).max(12).optional(),
     effectiveFrom: z.string().min(1, "適用開始日は必須です"),
@@ -83,6 +84,7 @@ export function PriceHistoryManager({
       amount: undefined,
       currency: "JPY",
       billingCycle: "MONTHLY",
+      billingInterval: 1,
       billingDay: 1,
       billingMonth: undefined,
       effectiveFrom: toDateInputValue(new Date().toISOString()),
@@ -96,6 +98,7 @@ export function PriceHistoryManager({
       amount: undefined,
       currency: "JPY",
       billingCycle: "MONTHLY",
+      billingInterval: 1,
       billingDay: 1,
       billingMonth: undefined,
       effectiveFrom: toDateInputValue(new Date().toISOString()),
@@ -109,6 +112,7 @@ export function PriceHistoryManager({
       amount: Number(priceChange.amount),
       currency: priceChange.currency,
       billingCycle: priceChange.billingCycle,
+      billingInterval: priceChange.billingInterval,
       billingDay: priceChange.billingDay,
       billingMonth: priceChange.billingMonth ?? undefined,
       effectiveFrom: toDateInputValue(priceChange.effectiveFrom),
@@ -140,6 +144,7 @@ export function PriceHistoryManager({
       amount: values.amount,
       currency: values.currency,
       billingCycle: values.billingCycle,
+      billingInterval: values.billingInterval,
       billingDay: values.billingDay,
       billingMonth: values.billingCycle === "YEARLY" ? values.billingMonth : undefined,
       effectiveFrom: new Date(values.effectiveFrom).toISOString(),
@@ -226,22 +231,35 @@ export function PriceHistoryManager({
                 </div>
               </div>
               <div className="space-y-1.5">
-                <Label htmlFor="price-billingCycle">支払い周期</Label>
-                <Controller
-                  control={control}
-                  name="billingCycle"
-                  render={({ field }) => (
-                    <Select value={field.value} onValueChange={field.onChange}>
-                      <SelectTrigger id="price-billingCycle" className="w-full">
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="MONTHLY">毎月</SelectItem>
-                        <SelectItem value="YEARLY">毎年</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  )}
-                />
+                <Label htmlFor="price-billingInterval">支払い周期</Label>
+                <div className="flex items-center gap-2">
+                  <Input
+                    id="price-billingInterval"
+                    type="number"
+                    min={1}
+                    step={1}
+                    className="w-20"
+                    {...register("billingInterval", { valueAsNumber: true })}
+                  />
+                  <Controller
+                    control={control}
+                    name="billingCycle"
+                    render={({ field }) => (
+                      <Select value={field.value} onValueChange={field.onChange}>
+                        <SelectTrigger id="price-billingCycle" className="w-full">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="MONTHLY">ヶ月ごと</SelectItem>
+                          <SelectItem value="YEARLY">年ごと</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    )}
+                  />
+                </div>
+                {errors.billingInterval && (
+                  <p className="text-sm text-destructive">{errors.billingInterval.message}</p>
+                )}
               </div>
               <div className="grid grid-cols-2 gap-4">
                 {billingCycle === "YEARLY" && (
@@ -300,6 +318,7 @@ export function PriceHistoryManager({
                     (月あたり {Math.round(getMonthlyAmount({
                       amount: Number(priceChange.amount),
                       billingCycle: priceChange.billingCycle,
+                      billingInterval: priceChange.billingInterval,
                     })).toLocaleString()} {CURRENCY_LABEL[priceChange.currency]}
                     {priceChange.currency === "USD" &&
                       (() => {

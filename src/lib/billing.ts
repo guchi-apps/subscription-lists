@@ -6,11 +6,17 @@ export type Currency = "JPY" | "USD";
 export interface BillingInfo {
   amount: number;
   billingCycle: BillingCycle;
+  billingInterval?: number;
 }
 
-/** 月当たりの金額。年次は amount/billingCycle から都度計算する(通貨は変換しない) */
-export function getMonthlyAmount({ amount, billingCycle }: BillingInfo): number {
-  return billingCycle === "YEARLY" ? amount / 12 : amount;
+/** 支払い周期を月数に換算する(例: MONTHLY×3=3ヶ月ごと→3、YEARLY×1=毎年→12) */
+function getCycleMonths(billingCycle: BillingCycle, billingInterval: number): number {
+  return billingCycle === "YEARLY" ? billingInterval * 12 : billingInterval;
+}
+
+/** 月当たりの金額。1回あたりの請求額を周期の月数で割って算出する(通貨は変換しない) */
+export function getMonthlyAmount({ amount, billingCycle, billingInterval = 1 }: BillingInfo): number {
+  return amount / getCycleMonths(billingCycle, billingInterval);
 }
 
 /** 指定した通貨の金額を USD/JPY レートで日本円に換算する。JPY はそのまま、レート未取得時は null */
@@ -23,15 +29,19 @@ export function formatBillingDay({
   billingCycle,
   billingDay,
   billingMonth,
+  billingInterval = 1,
 }: {
   billingCycle: BillingCycle;
   billingDay: number;
   billingMonth?: number | null;
+  billingInterval?: number;
 }): string {
   if (billingCycle === "YEARLY") {
-    return `毎年${billingMonth}月${billingDay}日`;
+    const cyclePrefix = billingInterval === 1 ? "毎年" : `${billingInterval}年ごと`;
+    return `${cyclePrefix}${billingMonth}月${billingDay}日`;
   }
-  return `毎月${billingDay}日`;
+  const cyclePrefix = billingInterval === 1 ? "毎月" : `${billingInterval}ヶ月ごと`;
+  return `${cyclePrefix}${billingDay}日`;
 }
 
 /** 指定した年月における実際の支払日(月末クランプ考慮。例: billingDay=31 の2月は28日/29日) */
@@ -65,6 +75,7 @@ export interface PriceChangeInput {
   amount: number;
   currency: Currency;
   billingCycle: BillingCycle;
+  billingInterval?: number;
   billingDay: number;
   billingMonth?: number | null;
   effectiveFrom: Date;
@@ -102,6 +113,20 @@ export interface Occurrence {
   amount: number;
   currency: Currency;
   billingCycle: BillingCycle;
+  billingInterval: number;
+}
+
+/** 対象年月が、料金改定の適用開始月から billingInterval ヶ月ごとの支払い月かどうか(MONTHLY用) */
+function isOnCycleMonth(effectiveFrom: Date, year: number, month: number, billingInterval: number): boolean {
+  if (billingInterval <= 1) return true;
+  const monthsDiff = (year - effectiveFrom.getFullYear()) * 12 + (month - (effectiveFrom.getMonth() + 1));
+  return monthsDiff % billingInterval === 0;
+}
+
+/** 対象年が、料金改定の適用開始年から billingInterval 年ごとの支払い年かどうか(YEARLY用) */
+function isOnCycleYear(effectiveFrom: Date, year: number, billingInterval: number): boolean {
+  if (billingInterval <= 1) return true;
+  return (year - effectiveFrom.getFullYear()) % billingInterval === 0;
 }
 
 /**
@@ -122,7 +147,12 @@ export function getOccurrencesInMonth(
   const result: Occurrence[] = [];
 
   sorted.forEach((priceChange, index) => {
-    if (priceChange.billingCycle === "YEARLY" && priceChange.billingMonth !== month) {
+    const billingInterval = priceChange.billingInterval ?? 1;
+
+    if (priceChange.billingCycle === "YEARLY") {
+      if (priceChange.billingMonth !== month) return;
+      if (!isOnCycleYear(priceChange.effectiveFrom, year, billingInterval)) return;
+    } else if (!isOnCycleMonth(priceChange.effectiveFrom, year, month, billingInterval)) {
       return;
     }
 
@@ -141,6 +171,7 @@ export function getOccurrencesInMonth(
       amount: priceChange.amount,
       currency: priceChange.currency,
       billingCycle: priceChange.billingCycle,
+      billingInterval,
     });
   });
 

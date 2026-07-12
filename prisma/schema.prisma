@@ -118,11 +118,12 @@ model SubscriptionPrice {
   subscriptionId String
   subscription   Subscription @relation(fields: [subscriptionId], references: [id], onDelete: Cascade)
 
-  amount       Decimal      @db.Decimal(10, 2) // 1回あたりの請求額
-  currency     Currency     @default(JPY) // amount の通貨
-  billingCycle BillingCycle @default(MONTHLY)
-  billingDay   Int // 支払日(1-31)
-  billingMonth Int? // YEARLY のときのみ使用(1-12)
+  amount          Decimal      @db.Decimal(10, 2) // 1回あたりの請求額
+  currency        Currency     @default(JPY) // amount の通貨
+  billingCycle    BillingCycle @default(MONTHLY)
+  billingInterval Int          @default(1) // 何ヶ月/何年ごとか(例: billingCycle=MONTHLY かつ 3 なら3ヶ月ごと)
+  billingDay      Int // 支払日(1-31)
+  billingMonth    Int? // YEARLY のときのみ使用(1-12)
 
   effectiveFrom DateTime @db.Date // この金額が適用され始めた日
 

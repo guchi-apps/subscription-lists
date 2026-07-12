@@ -8,6 +8,7 @@ const priceFieldsSchema = z
     amount: z.number().positive("金額は0より大きい数値が必須です"),
     currency: CurrencyEnum.default("JPY"),
     billingCycle: BillingCycleEnum,
+    billingInterval: z.number().int().min(1, "1以上の整数を入力してください").default(1),
     billingDay: z.number().int().min(1).max(31),
     billingMonth: z.number().int().min(1).max(12).optional(),
   })
@@ -47,6 +48,7 @@ export const UpdatePriceChangeSchema = z
     amount: z.number().positive().optional(),
     currency: CurrencyEnum.optional(),
     billingCycle: BillingCycleEnum.optional(),
+    billingInterval: z.number().int().min(1, "1以上の整数を入力してください").optional(),
     billingDay: z.number().int().min(1).max(31).optional(),
     billingMonth: z.number().int().min(1).max(12).optional().nullable(),
     effectiveFrom: z.string().min(1).optional(),

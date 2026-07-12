@@ -42,6 +42,7 @@ export async function POST(request: Request, { params }: Params) {
       amount: parsed.data.amount,
       currency: parsed.data.currency,
       billingCycle: parsed.data.billingCycle,
+      billingInterval: parsed.data.billingInterval,
       billingDay: parsed.data.billingDay,
       billingMonth: parsed.data.billingCycle === "YEARLY" ? parsed.data.billingMonth : null,
       effectiveFrom,

@@ -37,6 +37,7 @@ type CalendarEvent = {
   amount: number;
   currency: Currency;
   billingCycle: BillingCycle;
+  billingInterval: number;
 };
 
 export function SubscriptionCalendar({
@@ -80,6 +81,7 @@ export function SubscriptionCalendar({
             amount: occurrence.amount,
             currency: occurrence.currency,
             billingCycle: occurrence.billingCycle,
+            billingInterval: occurrence.billingInterval,
           });
         }
       }
@@ -119,7 +121,11 @@ export function SubscriptionCalendar({
                 <DialogDescription>
                   {selected.amount.toLocaleString()} {CURRENCY_LABEL[selected.currency]} / 月あたり{" "}
                   {Math.round(
-                    getMonthlyAmount({ amount: selected.amount, billingCycle: selected.billingCycle })
+                    getMonthlyAmount({
+                      amount: selected.amount,
+                      billingCycle: selected.billingCycle,
+                      billingInterval: selected.billingInterval,
+                    })
                   ).toLocaleString()}{" "}
                   {CURRENCY_LABEL[selected.currency]}
                   {selected.currency === "USD" &&

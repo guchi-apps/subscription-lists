@@ -31,6 +31,7 @@ const formSchema = z
     amount: z.number().positive("金額は0より大きい数値が必須です").optional(),
     currency: z.enum(["JPY", "USD"]).optional(),
     billingCycle: z.enum(["MONTHLY", "YEARLY"]).optional(),
+    billingInterval: z.number().int().min(1, "1以上の整数を入力してください").optional(),
     billingDay: z.number().int().min(1, "1〜31で入力してください").max(31, "1〜31で入力してください").optional(),
     billingMonth: z.number().int().min(1).max(12).optional(),
   })
@@ -83,6 +84,7 @@ export function SubscriptionForm({
       amount: undefined,
       currency: "JPY",
       billingCycle: "MONTHLY",
+      billingInterval: 1,
       billingDay: 1,
       billingMonth: undefined,
     },
@@ -109,6 +111,7 @@ export function SubscriptionForm({
               amount: values.amount,
               currency: values.currency,
               billingCycle: values.billingCycle,
+              billingInterval: values.billingInterval,
               billingDay: values.billingDay,
               billingMonth: values.billingMonth,
             },
@@ -173,22 +176,35 @@ export function SubscriptionForm({
           </div>
 
           <div className="space-y-1.5">
-            <Label htmlFor="billingCycle">支払い周期</Label>
-            <Controller
-              control={control}
-              name="billingCycle"
-              render={({ field }) => (
-                <Select value={field.value} onValueChange={field.onChange}>
-                  <SelectTrigger id="billingCycle" className="w-full">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="MONTHLY">毎月</SelectItem>
-                    <SelectItem value="YEARLY">毎年</SelectItem>
-                  </SelectContent>
-                </Select>
-              )}
-            />
+            <Label htmlFor="billingInterval">支払い周期</Label>
+            <div className="flex items-center gap-2">
+              <Input
+                id="billingInterval"
+                type="number"
+                min={1}
+                step={1}
+                className="w-20"
+                {...register("billingInterval", { valueAsNumber: true })}
+              />
+              <Controller
+                control={control}
+                name="billingCycle"
+                render={({ field }) => (
+                  <Select value={field.value} onValueChange={field.onChange}>
+                    <SelectTrigger id="billingCycle" className="w-full">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="MONTHLY">ヶ月ごと</SelectItem>
+                      <SelectItem value="YEARLY">年ごと</SelectItem>
+                    </SelectContent>
+                  </Select>
+                )}
+              />
+            </div>
+            {errors.billingInterval && (
+              <p className="text-sm text-destructive">{errors.billingInterval.message}</p>
+            )}
           </div>
 
           <div className="grid grid-cols-2 gap-4">

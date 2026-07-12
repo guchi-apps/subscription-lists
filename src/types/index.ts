@@ -10,6 +10,7 @@ export type SubscriptionPriceDTO = {
   amount: string;
   currency: Currency;
   billingCycle: BillingCycle;
+  billingInterval: number;
   billingDay: number;
   billingMonth: number | null;
   effectiveFrom: string;
