@@ -57,6 +57,12 @@ const newSubscriptionSchema = formSchema.refine((data) => data.amount !== undefi
 
 type SubscriptionFormValues = z.infer<typeof formSchema>;
 
+// 枠で囲む代わりに下線だけで入力欄を区切る、このフォーム専用の見た目
+const LINE_INPUT_CLASS =
+  "rounded-none border-x-0 border-t-0 border-b border-input bg-transparent px-0 focus-visible:ring-0 focus-visible:border-b-2 focus-visible:border-ring disabled:bg-transparent dark:bg-transparent dark:disabled:bg-transparent";
+const LINE_SELECT_TRIGGER_CLASS =
+  "rounded-none border-x-0 border-t-0 border-b border-input bg-transparent pl-0 focus-visible:ring-0 focus-visible:border-b-2 focus-visible:border-ring dark:bg-transparent dark:hover:bg-transparent";
+
 const newPaymentMethodSchema = z.object({
   name: z.string().min(1, "支払い方法名は必須です").max(50),
 });
@@ -194,36 +200,47 @@ export function SubscriptionForm({
     <form onSubmit={handleSubmit(onSubmit)} className="max-w-xl space-y-6">
       <div className="space-y-1.5">
         <Label htmlFor="name">サブスク名</Label>
-        <Input id="name" {...register("name")} />
+        <Input id="name" className={LINE_INPUT_CLASS} {...register("name")} />
         {errors.name && <p className="text-sm text-destructive">{errors.name.message}</p>}
       </div>
 
       {!isEdit && (
         <>
-          <div className="grid grid-cols-[1fr_auto] gap-4">
-            <div className="space-y-1.5">
-              <Label htmlFor="amount">金額</Label>
-              <Input id="amount" type="number" step="1" {...register("amount", { valueAsNumber: true })} />
-              {errors.amount && <p className="text-sm text-destructive">{errors.amount.message}</p>}
-            </div>
-            <div className="space-y-1.5">
-              <Label htmlFor="currency">通貨</Label>
+          <div className="space-y-1.5">
+            <Label htmlFor="amount">金額</Label>
+            <div
+              className={`flex items-center border-b transition-colors focus-within:border-b-2 focus-within:border-ring ${
+                errors.amount ? "border-destructive" : "border-input"
+              }`}
+            >
               <Controller
                 control={control}
                 name="currency"
                 render={({ field }) => (
                   <Select value={field.value} onValueChange={field.onChange}>
-                    <SelectTrigger id="currency" className="w-24">
+                    <SelectTrigger
+                      id="currency"
+                      aria-label="通貨"
+                      className="w-14 shrink-0 rounded-none border-0 bg-transparent pl-0 focus-visible:ring-0 dark:bg-transparent dark:hover:bg-transparent"
+                    >
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="JPY">円</SelectItem>
-                      <SelectItem value="USD">ドル</SelectItem>
+                      <SelectItem value="JPY">¥</SelectItem>
+                      <SelectItem value="USD">$</SelectItem>
                     </SelectContent>
                   </Select>
                 )}
               />
+              <Input
+                id="amount"
+                type="number"
+                step="1"
+                className="flex-1 rounded-none border-0 bg-transparent px-0 focus-visible:ring-0 dark:bg-transparent"
+                {...register("amount", { valueAsNumber: true })}
+              />
             </div>
+            {errors.amount && <p className="text-sm text-destructive">{errors.amount.message}</p>}
           </div>
 
           <div className="space-y-1.5">
@@ -234,7 +251,7 @@ export function SubscriptionForm({
                 type="number"
                 min={1}
                 step={1}
-                className="w-20"
+                className={`${LINE_INPUT_CLASS} w-20`}
                 {...register("billingInterval", { valueAsNumber: true })}
               />
               <Controller
@@ -242,7 +259,7 @@ export function SubscriptionForm({
                 name="billingCycle"
                 render={({ field }) => (
                   <Select value={field.value} onValueChange={field.onChange}>
-                    <SelectTrigger id="billingCycle" className="w-full">
+                    <SelectTrigger id="billingCycle" className={`${LINE_SELECT_TRIGGER_CLASS} w-full`}>
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
@@ -267,6 +284,7 @@ export function SubscriptionForm({
                   type="number"
                   min={1}
                   max={12}
+                  className={LINE_INPUT_CLASS}
                   {...register("billingMonth", { valueAsNumber: true })}
                 />
                 {errors.billingMonth && (
@@ -281,6 +299,7 @@ export function SubscriptionForm({
                 type="number"
                 min={1}
                 max={31}
+                className={LINE_INPUT_CLASS}
                 {...register("billingDay", { valueAsNumber: true })}
               />
               {errors.billingDay && (
@@ -323,7 +342,11 @@ export function SubscriptionForm({
               >
                 <div className="space-y-1.5">
                   <Label htmlFor="newPaymentMethodName">名称</Label>
-                  <Input id="newPaymentMethodName" {...registerNewPaymentMethod("name")} />
+                  <Input
+                    id="newPaymentMethodName"
+                    className={LINE_INPUT_CLASS}
+                    {...registerNewPaymentMethod("name")}
+                  />
                   {newPaymentMethodErrors.name && (
                     <p className="text-sm text-destructive">
                       {newPaymentMethodErrors.name.message}
@@ -343,7 +366,7 @@ export function SubscriptionForm({
           name="paymentMethodId"
           render={({ field }) => (
             <Select value={field.value} onValueChange={field.onChange}>
-              <SelectTrigger id="paymentMethodId" className="w-full">
+              <SelectTrigger id="paymentMethodId" className={`${LINE_SELECT_TRIGGER_CLASS} w-full`}>
                 <SelectValue placeholder="選択してください" />
               </SelectTrigger>
               <SelectContent>
@@ -368,13 +391,13 @@ export function SubscriptionForm({
 
       <div className="space-y-1.5">
         <Label htmlFor="startDate">契約開始日</Label>
-        <Input id="startDate" type="date" {...register("startDate")} />
+        <Input id="startDate" type="date" className={LINE_INPUT_CLASS} {...register("startDate")} />
         {errors.startDate && <p className="text-sm text-destructive">{errors.startDate.message}</p>}
       </div>
 
       <div className="space-y-1.5">
         <Label htmlFor="endDate">契約終了日(自動更新中・未定なら空欄)</Label>
-        <Input id="endDate" type="date" {...register("endDate")} />
+        <Input id="endDate" type="date" className={LINE_INPUT_CLASS} {...register("endDate")} />
         <p className="text-xs text-muted-foreground">
           未来の日付を入れると「解約予定」、過去の日付なら「解約済み」として一覧に表示されます。
         </p>
@@ -382,7 +405,7 @@ export function SubscriptionForm({
 
       <div className="space-y-1.5">
         <Label htmlFor="memo">メモ</Label>
-        <Textarea id="memo" {...register("memo")} />
+        <Textarea id="memo" className={LINE_INPUT_CLASS} {...register("memo")} />
       </div>
 
       <div className="flex gap-2">
