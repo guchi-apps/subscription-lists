@@ -1,15 +1,22 @@
 import { requireUserId } from "@/lib/auth-user";
 import { db } from "@/lib/db";
 import { MasterManager } from "@/components/MasterManager";
+import { LabelManager } from "@/components/LabelManager";
 
 export default async function SettingsPage() {
   const userId = await requireUserId();
   if (!userId) return null;
 
-  const paymentMethods = await db.paymentMethod.findMany({
-    where: { userId },
-    orderBy: { displayOrder: "asc" },
-  });
+  const [paymentMethods, labels] = await Promise.all([
+    db.paymentMethod.findMany({
+      where: { userId },
+      orderBy: { displayOrder: "asc" },
+    }),
+    db.label.findMany({
+      where: { userId },
+      orderBy: { name: "asc" },
+    }),
+  ]);
 
   return (
     <div className="mx-auto max-w-2xl space-y-8">
@@ -20,6 +27,7 @@ export default async function SettingsPage() {
         apiBasePath="/api/payment-methods"
         initialItems={JSON.parse(JSON.stringify(paymentMethods))}
       />
+      <LabelManager initialLabels={JSON.parse(JSON.stringify(labels))} />
     </div>
   );
 }

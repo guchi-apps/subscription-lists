@@ -1,6 +1,13 @@
 import { requireUserId } from "@/lib/auth-user";
 import { db } from "@/lib/db";
+import { resolveLabelIds } from "@/lib/label-service";
 import { CreateSubscriptionSchema } from "@/lib/validators";
+
+const SUBSCRIPTION_INCLUDE = {
+  paymentMethod: true,
+  priceChanges: { orderBy: { effectiveFrom: "asc" as const } },
+  labels: true,
+};
 
 export async function GET() {
   const userId = await requireUserId();
@@ -8,7 +15,7 @@ export async function GET() {
 
   const subscriptions = await db.subscription.findMany({
     where: { userId },
-    include: { paymentMethod: true, priceChanges: { orderBy: { effectiveFrom: "asc" } } },
+    include: SUBSCRIPTION_INCLUDE,
     orderBy: [{ name: "asc" }],
   });
   return Response.json(subscriptions);
@@ -24,7 +31,8 @@ export async function POST(request: Request) {
     return Response.json({ error: parsed.error.flatten() }, { status: 400 });
   }
 
-  const { startDate, endDate, price, ...rest } = parsed.data;
+  const { startDate, endDate, price, labels, ...rest } = parsed.data;
+  const labelIds = await resolveLabelIds(userId, labels);
 
   const subscription = await db.subscription.create({
     data: {
@@ -44,8 +52,9 @@ export async function POST(request: Request) {
           memo: price.memo,
         },
       },
+      ...(labelIds && { labels: { connect: labelIds.map((id) => ({ id })) } }),
     },
-    include: { paymentMethod: true, priceChanges: { orderBy: { effectiveFrom: "asc" } } },
+    include: SUBSCRIPTION_INCLUDE,
   });
   return Response.json(subscription, { status: 201 });
 }

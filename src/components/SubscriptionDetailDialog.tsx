@@ -21,6 +21,7 @@ import {
   type Occurrence,
 } from "@/lib/billing";
 import { ContractStatusBadge } from "@/components/ContractStatusBadge";
+import { LabelBadge } from "@/components/LabelBadge";
 import type { SubscriptionDTO } from "@/types";
 
 export function SubscriptionDetailDialog({
@@ -48,9 +49,12 @@ export function SubscriptionDetailDialog({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
-          <DialogTitle className="flex items-center gap-2">
+          <DialogTitle className="flex flex-wrap items-center gap-2">
             {subscription.name}
             <ContractStatusBadge status={status} />
+            {subscription.labels.map((label) => (
+              <LabelBadge key={label.id} label={label} />
+            ))}
           </DialogTitle>
         </DialogHeader>
 

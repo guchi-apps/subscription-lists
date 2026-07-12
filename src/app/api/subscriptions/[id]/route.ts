@@ -1,8 +1,15 @@
 import { requireUserId } from "@/lib/auth-user";
 import { db } from "@/lib/db";
+import { resolveLabelIds } from "@/lib/label-service";
 import { UpdateSubscriptionSchema } from "@/lib/validators";
 
 type Params = { params: Promise<{ id: string }> };
+
+const SUBSCRIPTION_INCLUDE = {
+  paymentMethod: true,
+  priceChanges: { orderBy: { effectiveFrom: "asc" as const } },
+  labels: true,
+};
 
 export async function GET(_request: Request, { params }: Params) {
   const userId = await requireUserId();
@@ -11,7 +18,7 @@ export async function GET(_request: Request, { params }: Params) {
   const { id } = await params;
   const subscription = await db.subscription.findFirst({
     where: { id, userId },
-    include: { paymentMethod: true, priceChanges: { orderBy: { effectiveFrom: "asc" } } },
+    include: SUBSCRIPTION_INCLUDE,
   });
   if (!subscription) return Response.json({ error: "Not Found" }, { status: 404 });
 
@@ -32,7 +39,8 @@ export async function PUT(request: Request, { params }: Params) {
   const existing = await db.subscription.findFirst({ where: { id, userId } });
   if (!existing) return Response.json({ error: "Not Found" }, { status: 404 });
 
-  const { startDate, endDate, ...rest } = parsed.data;
+  const { startDate, endDate, labels, ...rest } = parsed.data;
+  const labelIds = await resolveLabelIds(userId, labels);
 
   const subscription = await db.subscription.update({
     where: { id },
@@ -40,8 +48,9 @@ export async function PUT(request: Request, { params }: Params) {
       ...rest,
       ...(startDate && { startDate: new Date(startDate) }),
       ...(endDate !== undefined && { endDate: endDate ? new Date(endDate) : null }),
+      ...(labelIds && { labels: { set: labelIds.map((labelId) => ({ id: labelId })) } }),
     },
-    include: { paymentMethod: true, priceChanges: { orderBy: { effectiveFrom: "asc" } } },
+    include: SUBSCRIPTION_INCLUDE,
   });
   return Response.json(subscription);
 }

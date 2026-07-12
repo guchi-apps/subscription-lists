@@ -48,6 +48,7 @@ import {
 } from "@/lib/billing";
 import { cn } from "@/lib/utils";
 import { ContractStatusBadge } from "@/components/ContractStatusBadge";
+import { LabelBadge } from "@/components/LabelBadge";
 import { SubscriptionDetailDialog } from "@/components/SubscriptionDetailDialog";
 import type { SubscriptionDTO } from "@/types";
 
@@ -216,9 +217,12 @@ export function SubscriptionList({
                     onClick={() => setSelectedId(sub.id)}
                   >
                     <TableCell className="font-medium">
-                      <div className="flex items-center gap-2">
+                      <div className="flex flex-wrap items-center gap-2">
                         {sub.name}
                         <ContractStatusBadge status={status} />
+                        {sub.labels.map((label) => (
+                          <LabelBadge key={label.id} label={label} />
+                        ))}
                       </div>
                     </TableCell>
                     <TableCell className="text-right">
@@ -259,9 +263,12 @@ export function SubscriptionList({
               >
                 <CardContent className="flex items-center justify-between gap-2">
                   <div>
-                    <p className="flex items-center gap-2 font-medium">
+                    <p className="flex flex-wrap items-center gap-2 font-medium">
                       {sub.name}
                       <ContractStatusBadge status={status} />
+                      {sub.labels.map((label) => (
+                        <LabelBadge key={label.id} label={label} />
+                      ))}
                     </p>
                     <p className="text-sm text-muted-foreground">
                       月あたり{" "}

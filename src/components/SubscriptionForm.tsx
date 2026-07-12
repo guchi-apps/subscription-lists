@@ -28,7 +28,8 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
-import type { MasterDTO, SubscriptionDTO } from "@/types";
+import { LabelTagInput } from "@/components/LabelTagInput";
+import type { LabelDTO, MasterDTO, SubscriptionDTO } from "@/types";
 
 const formSchema = z
   .object({
@@ -37,6 +38,7 @@ const formSchema = z
     startDate: z.string().min(1, "契約開始日は必須です"),
     endDate: z.string().optional(),
     memo: z.string().optional(),
+    labels: z.array(z.string()),
     amount: z.number().nonnegative("金額は0以上の数値を入力してください").optional(),
     currency: z.enum(["JPY", "USD"]).optional(),
     billingCycle: z.enum(["MONTHLY", "YEARLY"]).optional(),
@@ -75,9 +77,11 @@ function toDateInputValue(iso: string): string {
 export function SubscriptionForm({
   subscription,
   paymentMethods: initialPaymentMethods,
+  labels: labelSuggestions,
 }: {
   subscription?: SubscriptionDTO;
   paymentMethods: MasterDTO[];
+  labels: LabelDTO[];
 }) {
   const router = useRouter();
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -105,6 +109,7 @@ export function SubscriptionForm({
         : toDateInputValue(new Date().toISOString()),
       endDate: subscription?.endDate ? toDateInputValue(subscription.endDate) : "",
       memo: subscription?.memo ?? "",
+      labels: subscription?.labels.map((l) => l.name) ?? [],
       amount: undefined,
       currency: "JPY",
       billingCycle: "MONTHLY",
@@ -158,6 +163,7 @@ export function SubscriptionForm({
         startDate: new Date(values.startDate).toISOString(),
         endDate: values.endDate ? new Date(values.endDate).toISOString() : undefined,
         memo: values.memo || undefined,
+        labels: values.labels,
       };
 
       const payload = isEdit
@@ -202,6 +208,22 @@ export function SubscriptionForm({
         <Label htmlFor="name">サブスク名</Label>
         <Input id="name" className={LINE_INPUT_CLASS} {...register("name")} />
         {errors.name && <p className="text-sm text-destructive">{errors.name.message}</p>}
+      </div>
+
+      <div className="space-y-1.5">
+        <Label htmlFor="labels">ラベル</Label>
+        <Controller
+          control={control}
+          name="labels"
+          render={({ field }) => (
+            <LabelTagInput
+              id="labels"
+              value={field.value}
+              onChange={field.onChange}
+              suggestions={labelSuggestions}
+            />
+          )}
+        />
       </div>
 
       {!isEdit && (

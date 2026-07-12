@@ -5,7 +5,7 @@ import { db } from "@/lib/db";
 import { getUsdJpyRate } from "@/lib/exchange-rate";
 import { SubscriptionForm } from "@/components/SubscriptionForm";
 import { PriceHistoryManager } from "@/components/PriceHistoryManager";
-import type { MasterDTO, SubscriptionDTO } from "@/types";
+import type { LabelDTO, MasterDTO, SubscriptionDTO } from "@/types";
 
 export default async function EditSubscriptionPage({
   params,
@@ -17,12 +17,17 @@ export default async function EditSubscriptionPage({
   if (!userId) redirect("/auth/signin");
 
   const { id } = await params;
-  const [subscription, paymentMethods, usdJpyRate] = await Promise.all([
+  const [subscription, paymentMethods, labels, usdJpyRate] = await Promise.all([
     db.subscription.findFirst({
       where: { id, userId },
-      include: { paymentMethod: true, priceChanges: { orderBy: { effectiveFrom: "asc" } } },
+      include: {
+        paymentMethod: true,
+        priceChanges: { orderBy: { effectiveFrom: "asc" } },
+        labels: true,
+      },
     }),
     db.paymentMethod.findMany({ where: { userId, isActive: true }, orderBy: { displayOrder: "asc" } }),
+    db.label.findMany({ where: { userId }, orderBy: { name: "asc" } }),
     getUsdJpyRate(),
   ]);
   if (!subscription) notFound();
@@ -36,6 +41,7 @@ export default async function EditSubscriptionPage({
         <SubscriptionForm
           subscription={subscriptionDto}
           paymentMethods={JSON.parse(JSON.stringify(paymentMethods)) as MasterDTO[]}
+          labels={JSON.parse(JSON.stringify(labels)) as LabelDTO[]}
         />
       </div>
       <PriceHistoryManager

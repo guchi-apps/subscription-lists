@@ -58,6 +58,7 @@ model User {
   sessions       Session[]
   subscriptions  Subscription[]
   paymentMethods PaymentMethod[]
+  labels         Label[]
 }
 
 // --- Application models ---
@@ -106,9 +107,29 @@ model Subscription {
   updatedAt DateTime @updatedAt
 
   priceChanges SubscriptionPrice[]
+  labels       Label[]
 
   @@index([userId])
   @@index([paymentMethodId])
+}
+
+// サブスクに自由に付けられるラベル(タグ)。名前で一度使うとユーザーごとの辞書に登録され、
+// 以後は設定画面での名称・色の管理や、入力時のサジェストに使われる。
+model Label {
+  id     String @id @default(cuid())
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  name  String // 例: "動画配信", "仕事用"
+  color String // 表示色(16進カラーコード、例: "#3B82F6")
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  subscriptions Subscription[]
+
+  @@unique([userId, name])
+  @@index([userId])
 }
 
 // サブスクの料金改定履歴。「いつから・いくら」を複数保持することで、

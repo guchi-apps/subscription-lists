@@ -14,7 +14,11 @@ export default async function SubscriptionsPage() {
   const [subscriptions, usdJpyRate] = await Promise.all([
     db.subscription.findMany({
       where: { userId },
-      include: { paymentMethod: true, priceChanges: { orderBy: { effectiveFrom: "asc" } } },
+      include: {
+        paymentMethod: true,
+        priceChanges: { orderBy: { effectiveFrom: "asc" } },
+        labels: true,
+      },
       orderBy: [{ name: "asc" }],
     }),
     getUsdJpyRate(),

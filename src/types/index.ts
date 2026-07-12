@@ -31,6 +31,7 @@ export type SubscriptionDTO = {
   createdAt: string;
   updatedAt: string;
   priceChanges: SubscriptionPriceDTO[];
+  labels: LabelDTO[];
 };
 
 export type MasterDTO = {
@@ -39,6 +40,15 @@ export type MasterDTO = {
   name: string;
   displayOrder: number;
   isActive: boolean;
+  createdAt: string;
+  updatedAt: string;
+};
+
+export type LabelDTO = {
+  id: string;
+  userId: string;
+  name: string;
+  color: string;
   createdAt: string;
   updatedAt: string;
 };

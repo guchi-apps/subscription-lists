@@ -1,5 +1,7 @@
 import { z } from "zod";
 
+import { LABEL_COLOR_PALETTE } from "@/lib/labels";
+
 export const BillingCycleEnum = z.enum(["MONTHLY", "YEARLY"]);
 export const CurrencyEnum = z.enum(["JPY", "USD"]);
 
@@ -18,6 +20,8 @@ const priceFieldsSchema = z
     path: ["billingMonth"],
   });
 
+const labelNamesSchema = z.array(z.string().trim().min(1).max(30)).max(20).optional();
+
 export const CreateSubscriptionSchema = z.object({
   name: z.string().min(1, "サブスク名は必須です").max(100),
   paymentMethodId: z.string().min(1, "支払い方法は必須です"),
@@ -25,6 +29,7 @@ export const CreateSubscriptionSchema = z.object({
   endDate: z.string().optional(),
   memo: z.string().optional(),
   price: priceFieldsSchema,
+  labels: labelNamesSchema,
 });
 export type CreateSubscription = z.infer<typeof CreateSubscriptionSchema>;
 
@@ -34,6 +39,7 @@ export const UpdateSubscriptionSchema = z.object({
   startDate: z.string().min(1).optional(),
   endDate: z.string().optional().nullable(),
   memo: z.string().optional(),
+  labels: labelNamesSchema,
 });
 export type UpdateSubscription = z.infer<typeof UpdateSubscriptionSchema>;
 
@@ -64,3 +70,13 @@ export const CreatePaymentMethodSchema = z.object({
 });
 export type CreatePaymentMethod = z.infer<typeof CreatePaymentMethodSchema>;
 export const UpdatePaymentMethodSchema = CreatePaymentMethodSchema.partial();
+
+const labelColorSchema = z.enum(LABEL_COLOR_PALETTE, {
+  message: "用意された16色から選択してください",
+});
+
+export const UpdateLabelSchema = z.object({
+  name: z.string().trim().min(1, "ラベル名は必須です").max(30).optional(),
+  color: labelColorSchema.optional(),
+});
+export type UpdateLabel = z.infer<typeof UpdateLabelSchema>;
