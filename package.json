@@ -7,8 +7,8 @@
   },
   "scripts": {
     "dev": "bash scripts/dev.sh",
-    "build": "prisma generate && next build",
-    "build:ci": "prisma generate && next build",
+    "build": "prisma generate && next build --webpack",
+    "build:ci": "prisma generate && next build --webpack",
     "start": "next start",
     "lint": "eslint",
     "typecheck": "tsc --noEmit",
@@ -44,6 +44,7 @@
     "zod": "^4.4.3"
   },
   "devDependencies": {
+    "@ducanh2912/next-pwa": "^10.2.9",
     "@tailwindcss/postcss": "^4",
     "@types/node": "^20",
     "@types/react": "^19",

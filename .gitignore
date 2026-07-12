@@ -17,6 +17,16 @@
 /.next/
 /out/
 
+# PWA (next-pwa がビルド時に public/ 配下へ生成する成果物)
+/public/sw.js
+/public/sw.js.map
+/public/workbox-*.js
+/public/workbox-*.js.map
+/public/swe-worker*.js
+/public/swe-worker*.js.map
+/public/fallback-*.js
+/public/fallback-*.js.map
+
 # production
 /build
 

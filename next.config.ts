@@ -1,4 +1,5 @@
 import type { NextConfig } from "next";
+import withPWAInit from "@ducanh2912/next-pwa";
 
 const devAllowedOrigins = [
   "*.sslip.io",
@@ -14,6 +15,18 @@ const nextConfig: NextConfig = {
   images: {
     remotePatterns: [{ protocol: "https", hostname: "lh3.googleusercontent.com" }],
   },
+  // next-pwa が (disable 時も) webpack 設定を付与するため、
+  // 開発時の Turbopack との併用エラーを抑止する。本番ビルドは --webpack で実行する。
+  turbopack: {},
 };
 
-export default nextConfig;
+const withPWA = withPWAInit({
+  dest: "public",
+  disable: process.env.NODE_ENV === "development",
+  register: true,
+  workboxOptions: {
+    disableDevLogs: true,
+  },
+});
+
+export default withPWA(nextConfig);
