@@ -2,6 +2,9 @@ import { requireUserId } from "@/lib/auth-user";
 import { db } from "@/lib/db";
 import { MasterManager } from "@/components/MasterManager";
 import { LabelManager } from "@/components/LabelManager";
+import { AppVersionInfo } from "@/components/AppVersionInfo";
+import { CHANGELOG } from "@/lib/changelog";
+import packageJson from "../../../../package.json";
 
 export default async function SettingsPage() {
   const userId = await requireUserId();
@@ -28,6 +31,7 @@ export default async function SettingsPage() {
         initialItems={JSON.parse(JSON.stringify(paymentMethods))}
       />
       <LabelManager initialLabels={JSON.parse(JSON.stringify(labels))} />
+      <AppVersionInfo version={packageJson.version} changelog={CHANGELOG} />
     </div>
   );
 }
