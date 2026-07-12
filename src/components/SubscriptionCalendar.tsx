@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { DayPicker, type DayProps } from "react-day-picker";
 import { ja } from "date-fns/locale";
 import { addMonths, format, subMonths } from "date-fns";
@@ -27,6 +27,11 @@ const CURRENCY_LABEL: Record<Currency, string> = { JPY: "円", USD: "ドル" };
 
 const MAX_VISIBLE_EVENTS = 3;
 
+// モバイルではフッタータブバー(74px)分、デスクトップでは main の下余白(24px)分を画面下から確保する
+const BOTTOM_RESERVE_MOBILE = 74 + 16;
+const BOTTOM_RESERVE_DESKTOP = 24;
+const MIN_CALENDAR_HEIGHT = 320;
+
 type DayEvent = {
   subscription: SubscriptionDTO;
   amount: number;
@@ -48,6 +53,25 @@ export function SubscriptionCalendar({
 }) {
   const [month, setMonth] = useState(new Date());
   const [selected, setSelected] = useState<DayEvent | null>(null);
+  const cardRef = useRef<HTMLDivElement>(null);
+  const [calendarHeight, setCalendarHeight] = useState<number | null>(null);
+
+  useEffect(() => {
+    const el = cardRef.current;
+    if (!el) return;
+
+    function updateHeight() {
+      if (!el) return;
+      const isDesktop = window.matchMedia("(min-width: 768px)").matches;
+      const bottomReserve = isDesktop ? BOTTOM_RESERVE_DESKTOP : BOTTOM_RESERVE_MOBILE;
+      const available = window.innerHeight - el.getBoundingClientRect().top - bottomReserve;
+      setCalendarHeight(Math.max(available, MIN_CALENDAR_HEIGHT));
+    }
+
+    updateHeight();
+    window.addEventListener("resize", updateHeight);
+    return () => window.removeEventListener("resize", updateHeight);
+  }, []);
 
   const eventsByDate = useMemo(() => {
     // 月表示は前後の月の日付もグリッドに含まれるため、3ヶ月分をまとめて計算する
@@ -99,7 +123,11 @@ export function SubscriptionCalendar({
 
   return (
     <>
-      <div className="rounded-2xl border border-border/60 bg-card p-3 shadow-sm sm:p-6">
+      <div
+        ref={cardRef}
+        className="flex flex-col overflow-hidden rounded-2xl border border-border/60 bg-card p-3 shadow-sm sm:p-6"
+        style={calendarHeight ? { height: calendarHeight } : undefined}
+      >
         <DayPicker
           month={month}
           onMonthChange={setMonth}
@@ -107,9 +135,9 @@ export function SubscriptionCalendar({
           showOutsideDays
           fixedWeeks
           classNames={{
-            root: "w-full",
-            months: "w-full",
-            month: "w-full space-y-4",
+            root: "flex w-full flex-1 min-h-0 flex-col",
+            months: "flex w-full flex-1 min-h-0 flex-col",
+            month: "flex w-full flex-1 min-h-0 flex-col space-y-4",
             nav: "flex items-center justify-between",
             button_previous: cn(
               "inline-flex size-8 items-center justify-center rounded-full text-muted-foreground",
@@ -122,9 +150,10 @@ export function SubscriptionCalendar({
             month_caption: "flex h-8 items-center justify-center text-base font-semibold tracking-tight",
             weekdays: "flex",
             weekday: "min-w-0 flex-1 pb-2 text-center text-[11px] font-medium tracking-wide text-muted-foreground uppercase",
-            month_grid: "w-full border-collapse",
-            week: "flex w-full gap-1 [&+&]:mt-1",
-            day: "min-w-0 flex-1 p-0 align-top",
+            month_grid: "flex w-full flex-1 min-h-0 flex-col border-collapse",
+            weeks: "flex flex-1 min-h-0 flex-col",
+            week: "flex w-full flex-1 min-h-0 gap-1 [&+&]:mt-1",
+            day: "min-w-0 flex-1 p-0",
           }}
           components={{
             Day: renderDay,
@@ -191,7 +220,7 @@ function CalendarDayCell({
   const hiddenCount = events.length - visibleEvents.length;
 
   return (
-    <td className={cn("h-24 sm:h-28", className)} {...tdProps}>
+    <td className={cn("h-full", className)} {...tdProps}>
       <div
         className={cn(
           "flex h-full w-full flex-col gap-1 overflow-hidden rounded-xl p-1.5 transition-colors",
