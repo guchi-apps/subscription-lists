@@ -25,6 +25,16 @@ export function convertToJpy(amount: number, currency: Currency, usdJpyRate: num
   return usdJpyRate === null ? null : amount * usdJpyRate;
 }
 
+export const CURRENCY_LABEL: Record<Currency, string> = { JPY: "円", USD: "ドル" };
+
+/** 金額を「1,000 円」のように整形し、外貨はおよその円換算を括弧書きで併記する */
+export function formatAmountWithJpy(amount: number, currency: Currency, usdJpyRate: number | null): string {
+  const base = `${amount.toLocaleString()} ${CURRENCY_LABEL[currency]}`;
+  if (currency === "JPY") return base;
+  const jpy = convertToJpy(amount, currency, usdJpyRate);
+  return jpy !== null ? `${base} (約${Math.round(jpy).toLocaleString()}円)` : base;
+}
+
 export function formatBillingDay({
   billingCycle,
   billingDay,

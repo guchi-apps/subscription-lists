@@ -33,7 +33,7 @@ import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import {
   CONTRACT_STATUS_LABEL,
-  convertToJpy,
+  formatAmountWithJpy,
   formatBillingDay,
   getContractStatus,
   getCurrentPrice,
@@ -43,16 +43,7 @@ import {
 import { cn } from "@/lib/utils";
 import type { SubscriptionDTO } from "@/types";
 
-const CURRENCY_LABEL: Record<"JPY" | "USD", string> = { JPY: "円", USD: "ドル" };
-
-function formatAmountWithJpy(amount: number, currency: "JPY" | "USD", usdJpyRate: number | null) {
-  const base = `${amount.toLocaleString()} ${CURRENCY_LABEL[currency]}`;
-  if (currency === "JPY") return base;
-  const jpy = convertToJpy(amount, currency, usdJpyRate);
-  return jpy !== null ? `${base} (約${Math.round(jpy).toLocaleString()}円)` : base;
-}
-
-function ContractStatusBadge({ status }: { status: ContractStatus }) {
+export function ContractStatusBadge({ status }: { status: ContractStatus }) {
   if (status === "AUTO_RENEWING") {
     return <Badge variant="secondary">{CONTRACT_STATUS_LABEL[status]}</Badge>;
   }

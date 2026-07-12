@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useFormStatus } from "react-dom";
-import { ListChecks, CalendarDays, Settings, LogOut, Loader2, Wallet } from "lucide-react";
+import { ListChecks, CalendarDays, ChartGantt, Settings, LogOut, Loader2, Wallet } from "lucide-react";
 
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
@@ -13,6 +13,7 @@ import { signOutAction } from "@/app/actions/auth";
 const navItems = [
   { href: "/subscriptions", label: "一覧", icon: ListChecks },
   { href: "/calendar", label: "カレンダー", icon: CalendarDays },
+  { href: "/timeline", label: "タイムライン", icon: ChartGantt },
   { href: "/settings", label: "設定", icon: Settings },
 ];
 
