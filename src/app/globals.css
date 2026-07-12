@@ -131,46 +131,48 @@
 }
 
 /* react-big-calendar をテーマカラーに合わせて上書き */
+/* react-big-calendar 本体のCSSと詳細度を揃えるとインポート順序次第で負けるため、
+   .rbc-calendar でスコープして詳細度を上げ、常にこちらが優先されるようにする */
 .rbc-calendar {
   color: var(--foreground);
 }
-.rbc-off-range-bg {
+.rbc-calendar .rbc-off-range-bg {
   background: var(--muted);
 }
-.rbc-today {
+.rbc-calendar .rbc-today {
   background: color-mix(in oklch, var(--primary) 12%, transparent);
 }
-.rbc-header,
-.rbc-month-view,
-.rbc-day-bg + .rbc-day-bg,
-.rbc-month-row + .rbc-month-row,
-.rbc-agenda-view table.rbc-agenda-table {
+.rbc-calendar .rbc-header,
+.rbc-calendar .rbc-month-view,
+.rbc-calendar .rbc-day-bg + .rbc-day-bg,
+.rbc-calendar .rbc-month-row + .rbc-month-row,
+.rbc-calendar .rbc-agenda-view table.rbc-agenda-table {
   border-color: var(--border);
 }
-.rbc-header {
+.rbc-calendar .rbc-header {
   padding: 6px 4px;
 }
-.rbc-event {
+.rbc-calendar .rbc-event {
   background: var(--primary);
   color: var(--primary-foreground);
   border: none;
 }
-.rbc-event.rbc-selected {
+.rbc-calendar .rbc-event.rbc-selected {
   background: color-mix(in oklch, var(--primary) 80%, black);
 }
-.rbc-toolbar button {
+.rbc-calendar .rbc-toolbar button {
   color: var(--foreground);
   border-color: var(--border);
   border-radius: var(--radius-md);
 }
-.rbc-toolbar button:hover {
+.rbc-calendar .rbc-toolbar button:hover {
   background: var(--muted);
 }
-.rbc-toolbar button.rbc-active {
+.rbc-calendar .rbc-toolbar button.rbc-active {
   background: var(--primary);
   color: var(--primary-foreground);
 }
-.rbc-show-more {
+.rbc-calendar .rbc-show-more {
   color: var(--primary);
   background: transparent;
 }
