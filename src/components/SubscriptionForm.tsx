@@ -203,7 +203,7 @@ export function SubscriptionForm({
       }
 
       toast.success(subscription ? "サブスクを更新しました" : "サブスクを登録しました");
-      router.push(subscription ? `/subscriptions/${subscription.id}/edit` : "/subscriptions");
+      router.push("/subscriptions");
       router.refresh();
     } finally {
       setIsSubmitting(false);
