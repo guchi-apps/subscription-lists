@@ -26,7 +26,6 @@ import type { SubscriptionDTO } from "@/types";
 const ROW_HEIGHT = 40;
 const BAR_HEIGHT = 22;
 const HEADER_HEIGHT = 32;
-const LABEL_COLUMN_WIDTH = 160;
 const TARGET_TIMELINE_WIDTH = 2000;
 const MIN_PX_PER_DAY = 1.2;
 const MAX_PX_PER_DAY = 8;
@@ -136,21 +135,24 @@ export function SubscriptionTimeline({
       </div>
 
       <div className="flex overflow-hidden rounded-xl bg-card ring-1 ring-foreground/10">
-        <div className="shrink-0 border-r" style={{ width: LABEL_COLUMN_WIDTH }}>
+        {/* 項目部分(サブスク名など)の幅。スマホでは狭くしてタイムラインを見やすくする(w-28=112px はPC用 w-40=160px の0.7倍) */}
+        <div className="w-28 shrink-0 border-r md:w-40">
           <div style={{ height: HEADER_HEIGHT }} />
-          {rows.map(({ sub, startDate, endDate }) => (
-            <div
-              key={sub.id}
-              className="flex flex-col justify-center overflow-hidden border-b px-2 last:border-b-0"
+          {rows.map((row, index) => (
+            <button
+              key={row.sub.id}
+              type="button"
+              onClick={() => setSelected(rows[index])}
+              className="flex w-full flex-col justify-center overflow-hidden border-b px-2 text-left outline-none transition-colors last:border-b-0 hover:bg-muted/50 focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-inset"
               style={{ height: ROW_HEIGHT }}
             >
-              <p className="truncate text-sm font-medium" title={sub.name}>
-                {sub.name}
+              <p className="truncate text-sm font-medium" title={row.sub.name}>
+                {row.sub.name}
               </p>
-              <p className="truncate text-[11px] text-muted-foreground">
-                {format(startDate, "yyyy/MM")} 〜 {endDate ? format(endDate, "yyyy/MM") : ""}
+              <p className="truncate text-[9px] text-muted-foreground">
+                {format(row.startDate, "yyyy/MM")} 〜 {row.endDate ? format(row.endDate, "yyyy/MM") : ""}
               </p>
-            </div>
+            </button>
           ))}
         </div>
 
