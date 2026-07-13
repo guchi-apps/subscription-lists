@@ -70,13 +70,20 @@ export const CONTRACT_STATUS_LABEL: Record<ContractStatus, string> = {
   ENDED: "解約済み",
 };
 
-/** 契約終了日から契約状況を判定する(終了日なし=自動更新中、未来日=解約予定、過去日=解約済み) */
-export function getContractStatus(endDate: Date | null, today: Date = new Date()): ContractStatus {
-  if (!endDate) return "AUTO_RENEWING";
-  const endStart = startOfDay(endDate);
-  const todayStart = startOfDay(today);
-  if (isBefore(endStart, todayStart)) return "ENDED";
-  return "SCHEDULED_TO_END";
+/**
+ * 契約終了日と更新有無から契約状況を判定する。
+ * 終了日が過去なら常に解約済み。終了日が未来なら解約予定。
+ * 終了日が未定(null)の場合は autoRenew が false なら解約予定、true なら自動更新中。
+ */
+export function getContractStatus(
+  endDate: Date | null,
+  autoRenew: boolean = true,
+  today: Date = new Date()
+): ContractStatus {
+  if (endDate) {
+    return isBefore(startOfDay(endDate), startOfDay(today)) ? "ENDED" : "SCHEDULED_TO_END";
+  }
+  return autoRenew ? "AUTO_RENEWING" : "SCHEDULED_TO_END";
 }
 
 // --- 料金改定履歴 ---

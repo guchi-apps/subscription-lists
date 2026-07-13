@@ -100,7 +100,8 @@ model Subscription {
   paymentMethod   PaymentMethod @relation(fields: [paymentMethodId], references: [id], onDelete: Restrict)
 
   startDate DateTime  @db.Date // 契約開始日
-  endDate   DateTime? @db.Date // 契約終了日(null=自動更新中。未来日=解約予定。過去日=解約済み)
+  endDate   DateTime? @db.Date // 契約終了日(過去日=解約済み、未来日=解約予定、null=autoRenewの値で判定)
+  autoRenew Boolean   @default(true) // 終了日未定時に更新するか(false=更新しない→終了日が未定でも解約予定として扱う)
   memo      String?   @db.Text
 
   createdAt DateTime @default(now())

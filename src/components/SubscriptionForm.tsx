@@ -11,6 +11,7 @@ import { toast } from "sonner";
 import { Loader2, Plus } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
+import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
@@ -37,6 +38,7 @@ const formSchema = z
     paymentMethodId: z.string().min(1, "支払い方法を選択してください"),
     startDate: z.string().min(1, "契約開始日は必須です"),
     endDate: z.string().optional(),
+    autoRenew: z.boolean(),
     memo: z.string().optional(),
     labels: z.array(z.string()),
     amount: z.number().nonnegative("金額は0以上の数値を入力してください").optional(),
@@ -108,6 +110,7 @@ export function SubscriptionForm({
         ? toDateInputValue(subscription.startDate)
         : toDateInputValue(new Date().toISOString()),
       endDate: subscription?.endDate ? toDateInputValue(subscription.endDate) : "",
+      autoRenew: subscription?.autoRenew ?? true,
       memo: subscription?.memo ?? "",
       labels: subscription?.labels.map((l) => l.name) ?? [],
       amount: undefined,
@@ -166,6 +169,7 @@ export function SubscriptionForm({
           : isEdit
             ? null
             : undefined,
+        autoRenew: values.autoRenew,
         memo: values.memo || undefined,
         labels: values.labels,
       };
@@ -424,8 +428,24 @@ export function SubscriptionForm({
       <div className="space-y-1.5">
         <Label htmlFor="endDate">契約終了日(自動更新中・未定なら空欄)</Label>
         <Input id="endDate" type="date" className={LINE_INPUT_CLASS} {...register("endDate")} />
+        <Controller
+          control={control}
+          name="autoRenew"
+          render={({ field }) => (
+            <div className="flex items-center gap-2">
+              <Checkbox
+                id="autoRenew"
+                checked={!field.value}
+                onCheckedChange={(checked) => field.onChange(!checked)}
+              />
+              <Label htmlFor="autoRenew" className="font-normal">
+                更新しない
+              </Label>
+            </div>
+          )}
+        />
         <p className="text-xs text-muted-foreground">
-          未来の日付を入れると「解約予定」、過去の日付なら「解約済み」として一覧に表示されます。
+          未来の日付を入れると「解約予定」、過去の日付なら「解約済み」として一覧に表示されます。終了日が未定でも「更新しない」にチェックすると「解約予定」になります(過去の終了日を入れた場合は「解約済み」が優先されます)。
         </p>
       </div>
 
