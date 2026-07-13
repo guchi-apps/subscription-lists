@@ -61,20 +61,22 @@ function MonthlyJpyAmount({
   usdJpyRate: number | null;
 }) {
   if (currency === "JPY") {
-    return <span className="text-base font-semibold">{amount.toLocaleString()}円</span>;
+    return <span className="text-base font-semibold">{Math.round(amount).toLocaleString()}円</span>;
   }
+  // 円換算は丸める前の金額で行う(先に丸めると特に少額のドルで換算結果が大きくずれるため)
   const jpy = convertToJpy(amount, currency, usdJpyRate);
+  const displayAmount = Math.round(amount * 100) / 100;
   if (jpy === null) {
     return (
       <span className="text-base font-semibold">
-        {amount.toLocaleString()} {CURRENCY_LABEL[currency]}
+        {displayAmount.toLocaleString()} {CURRENCY_LABEL[currency]}
       </span>
     );
   }
   return (
     <span className="inline-flex items-baseline gap-1">
       <span className="text-xs text-muted-foreground">
-        {amount.toLocaleString()} {CURRENCY_LABEL[currency]} /
+        {displayAmount.toLocaleString()} {CURRENCY_LABEL[currency]} /
       </span>
       <span className="text-base font-semibold">約{Math.round(jpy).toLocaleString()}円</span>
     </span>
@@ -225,7 +227,7 @@ export function SubscriptionList({
                     </TableCell>
                     <TableCell className="text-right">
                       <MonthlyJpyAmount
-                        amount={Math.round(getMonthlyAmount(currentPrice))}
+                        amount={getMonthlyAmount(currentPrice)}
                         currency={currentPrice.currency}
                         usdJpyRate={usdJpyRate}
                       />
@@ -271,7 +273,7 @@ export function SubscriptionList({
                     <p className="text-sm text-muted-foreground">
                       月あたり{" "}
                       <MonthlyJpyAmount
-                        amount={Math.round(getMonthlyAmount(currentPrice))}
+                        amount={getMonthlyAmount(currentPrice)}
                         currency={currentPrice.currency}
                         usdJpyRate={usdJpyRate}
                       />

@@ -225,7 +225,7 @@ export function SubscriptionTimeline({
                   {formatAmountWithJpy(selected.currentPrice.amount, selected.currentPrice.currency, usdJpyRate)}{" "}
                   / 月あたり{" "}
                   {formatAmountWithJpy(
-                    Math.round(getMonthlyAmount(selected.currentPrice)),
+                    getMonthlyAmount(selected.currentPrice),
                     selected.currentPrice.currency,
                     usdJpyRate
                   )}

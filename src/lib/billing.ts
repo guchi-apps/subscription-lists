@@ -29,7 +29,9 @@ export const CURRENCY_LABEL: Record<Currency, string> = { JPY: "円", USD: "ド�
 
 /** 金額を「1,000 円」のように整形し、外貨はおよその円換算を括弧書きで併記する */
 export function formatAmountWithJpy(amount: number, currency: Currency, usdJpyRate: number | null): string {
-  const base = `${amount.toLocaleString()} ${CURRENCY_LABEL[currency]}`;
+  // 円換算は丸める前の金額で行う(先に丸めると特に少額のドルで換算結果が大きくずれるため)
+  const displayAmount = currency === "JPY" ? Math.round(amount) : Math.round(amount * 100) / 100;
+  const base = `${displayAmount.toLocaleString()} ${CURRENCY_LABEL[currency]}`;
   if (currency === "JPY") return base;
   const jpy = convertToJpy(amount, currency, usdJpyRate);
   return jpy !== null ? `${base} (約${Math.round(jpy).toLocaleString()}円)` : base;

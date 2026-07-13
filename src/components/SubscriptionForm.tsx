@@ -265,7 +265,7 @@ export function SubscriptionForm({
               <Input
                 id="amount"
                 type="number"
-                step="1"
+                step="0.01"
                 className="flex-1 rounded-none border-0 bg-transparent px-0 focus-visible:ring-0 dark:bg-transparent"
                 {...register("amount", { valueAsNumber: true })}
               />
