@@ -241,7 +241,7 @@ export function PriceHistoryManager({
                   <Input
                     id="price-amount"
                     type="number"
-                    step="1"
+                    step="0.01"
                     className="flex-1 rounded-none border-0 bg-transparent px-0 focus-visible:ring-0 dark:bg-transparent"
                     {...register("amount", { valueAsNumber: true })}
                   />
@@ -349,17 +349,28 @@ export function PriceHistoryManager({
                 <p className="font-medium">
                   {Number(priceChange.amount).toLocaleString()} {CURRENCY_LABEL[priceChange.currency]}
                   <span className="ml-2 text-sm font-normal text-muted-foreground">
-                    (月あたり {Math.round(getMonthlyAmount({
-                      amount: Number(priceChange.amount),
-                      billingCycle: priceChange.billingCycle,
-                      billingInterval: priceChange.billingInterval,
-                    })).toLocaleString()} {CURRENCY_LABEL[priceChange.currency]}
-                    {priceChange.currency === "USD" &&
-                      (() => {
-                        const jpy = convertToJpy(Number(priceChange.amount), priceChange.currency, usdJpyRate);
-                        return jpy !== null ? ` / 約${Math.round(jpy).toLocaleString()}円` : "";
-                      })()}
-                    )
+                    {(() => {
+                      const monthlyRaw = getMonthlyAmount({
+                        amount: Number(priceChange.amount),
+                        billingCycle: priceChange.billingCycle,
+                        billingInterval: priceChange.billingInterval,
+                      });
+                      // 円換算は丸める前の金額で行う(先に丸めると特に少額のドルで換算結果が大きくずれるため)
+                      const monthlyDisplay =
+                        priceChange.currency === "JPY"
+                          ? Math.round(monthlyRaw)
+                          : Math.round(monthlyRaw * 100) / 100;
+                      const jpy = convertToJpy(monthlyRaw, priceChange.currency, usdJpyRate);
+                      return (
+                        <>
+                          (月あたり {monthlyDisplay.toLocaleString()} {CURRENCY_LABEL[priceChange.currency]}
+                          {priceChange.currency === "USD" && jpy !== null
+                            ? ` / 約${Math.round(jpy).toLocaleString()}円`
+                            : ""}
+                          )
+                        </>
+                      );
+                    })()}
                   </span>
                 </p>
                 <p className="text-sm text-muted-foreground">

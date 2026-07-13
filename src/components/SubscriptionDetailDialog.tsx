@@ -89,14 +89,17 @@ export function SubscriptionDetailDialog({
             <div className="space-y-1.5">
               {sortedPriceChanges.map((priceChange, index) => {
                 const amount = Number(priceChange.amount);
-                const monthly = Math.round(
-                  getMonthlyAmount({
-                    amount,
-                    billingCycle: priceChange.billingCycle,
-                    billingInterval: priceChange.billingInterval,
-                  })
-                );
-                const jpy = convertToJpy(monthly, priceChange.currency, usdJpyRate);
+                const monthlyRaw = getMonthlyAmount({
+                  amount,
+                  billingCycle: priceChange.billingCycle,
+                  billingInterval: priceChange.billingInterval,
+                });
+                // 円換算は丸める前の金額で行う(先に丸めると特に少額のドルで換算結果が大きくずれるため)
+                const monthly =
+                  priceChange.currency === "JPY"
+                    ? Math.round(monthlyRaw)
+                    : Math.round(monthlyRaw * 100) / 100;
+                const jpy = convertToJpy(monthlyRaw, priceChange.currency, usdJpyRate);
                 return (
                   <div key={priceChange.id} className="rounded-lg border p-2">
                     <p>

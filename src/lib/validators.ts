@@ -27,6 +27,7 @@ export const CreateSubscriptionSchema = z.object({
   paymentMethodId: z.string().min(1, "支払い方法は必須です"),
   startDate: z.string().min(1, "契約開始日は必須です"),
   endDate: z.string().optional(),
+  autoRenew: z.boolean().optional(),
   memo: z.string().optional(),
   price: priceFieldsSchema,
   labels: labelNamesSchema,
@@ -38,6 +39,7 @@ export const UpdateSubscriptionSchema = z.object({
   paymentMethodId: z.string().min(1).optional(),
   startDate: z.string().min(1).optional(),
   endDate: z.string().optional().nullable(),
+  autoRenew: z.boolean().optional(),
   memo: z.string().optional(),
   labels: labelNamesSchema,
 });

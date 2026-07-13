@@ -29,7 +29,9 @@ export const CURRENCY_LABEL: Record<Currency, string> = { JPY: "円", USD: "ド�
 
 /** 金額を「1,000 円」のように整形し、外貨はおよその円換算を括弧書きで併記する */
 export function formatAmountWithJpy(amount: number, currency: Currency, usdJpyRate: number | null): string {
-  const base = `${amount.toLocaleString()} ${CURRENCY_LABEL[currency]}`;
+  // 円換算は丸める前の金額で行う(先に丸めると特に少額のドルで換算結果が大きくずれるため)
+  const displayAmount = currency === "JPY" ? Math.round(amount) : Math.round(amount * 100) / 100;
+  const base = `${displayAmount.toLocaleString()} ${CURRENCY_LABEL[currency]}`;
   if (currency === "JPY") return base;
   const jpy = convertToJpy(amount, currency, usdJpyRate);
   return jpy !== null ? `${base} (約${Math.round(jpy).toLocaleString()}円)` : base;
@@ -70,13 +72,20 @@ export const CONTRACT_STATUS_LABEL: Record<ContractStatus, string> = {
   ENDED: "解約済み",
 };
 
-/** 契約終了日から契約状況を判定する(終了日なし=自動更新中、未来日=解約予定、過去日=解約済み) */
-export function getContractStatus(endDate: Date | null, today: Date = new Date()): ContractStatus {
-  if (!endDate) return "AUTO_RENEWING";
-  const endStart = startOfDay(endDate);
-  const todayStart = startOfDay(today);
-  if (isBefore(endStart, todayStart)) return "ENDED";
-  return "SCHEDULED_TO_END";
+/**
+ * 契約終了日と更新有無から契約状況を判定する。
+ * 終了日が過去なら常に解約済み。終了日が未来なら解約予定。
+ * 終了日が未定(null)の場合は autoRenew が false なら解約予定、true なら自動更新中。
+ */
+export function getContractStatus(
+  endDate: Date | null,
+  autoRenew: boolean = true,
+  today: Date = new Date()
+): ContractStatus {
+  if (endDate) {
+    return isBefore(startOfDay(endDate), startOfDay(today)) ? "ENDED" : "SCHEDULED_TO_END";
+  }
+  return autoRenew ? "AUTO_RENEWING" : "SCHEDULED_TO_END";
 }
 
 // --- 料金改定履歴 ---
