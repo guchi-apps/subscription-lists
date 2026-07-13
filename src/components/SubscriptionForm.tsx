@@ -161,7 +161,11 @@ export function SubscriptionForm({
         name: values.name,
         paymentMethodId: values.paymentMethodId,
         startDate: new Date(values.startDate).toISOString(),
-        endDate: values.endDate ? new Date(values.endDate).toISOString() : undefined,
+        endDate: values.endDate
+          ? new Date(values.endDate).toISOString()
+          : isEdit
+            ? null
+            : undefined,
         memo: values.memo || undefined,
         labels: values.labels,
       };
