@@ -97,7 +97,7 @@ function toRow(sub: SubscriptionDTO, usdJpyRate: number | null) {
   }));
   const startDate = new Date(sub.startDate);
   const endDate = sub.endDate ? new Date(sub.endDate) : null;
-  const status = getContractStatus(endDate);
+  const status = getContractStatus(endDate, sub.autoRenew);
   const referenceDate = status === "ENDED" && endDate ? endDate : new Date();
   const currentPrice = getCurrentPrice(priceChanges, referenceDate);
   const nextOccurrence =

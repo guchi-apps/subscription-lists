@@ -57,7 +57,7 @@ function toRow(sub: SubscriptionDTO) {
   }));
   const startDate = new Date(sub.startDate);
   const endDate = sub.endDate ? new Date(sub.endDate) : null;
-  const status = getContractStatus(endDate);
+  const status = getContractStatus(endDate, sub.autoRenew);
   const referenceDate = status === "ENDED" && endDate ? endDate : new Date();
   const currentPrice = getCurrentPrice(priceChanges, referenceDate);
   return { sub, status, startDate, endDate, currentPrice };
@@ -169,7 +169,7 @@ export function SubscriptionTimeline({
               const barLeft = dateToX(startDate);
               const barRight = dateToX(endDate ?? today);
               const barWidth = Math.max(barRight - barLeft, MIN_BAR_WIDTH);
-              const ongoing = status !== "ENDED" && !endDate;
+              const ongoing = status === "AUTO_RENEWING" && !endDate;
 
               return (
                 <button

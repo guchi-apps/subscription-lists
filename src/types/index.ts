@@ -27,6 +27,7 @@ export type SubscriptionDTO = {
   paymentMethod: MasterDTO;
   startDate: string;
   endDate: string | null;
+  autoRenew: boolean;
   memo: string | null;
   createdAt: string;
   updatedAt: string;
