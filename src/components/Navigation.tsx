@@ -2,12 +2,11 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useFormStatus } from "react-dom";
-import { ListChecks, CalendarDays, ChartGantt, Settings, LogOut, Loader2, Wallet } from "lucide-react";
+import { ListChecks, CalendarDays, ChartGantt, Settings, Wallet } from "lucide-react";
 
 import { cn } from "@/lib/utils";
-import { Button } from "@/components/ui/button";
 import { ThemeToggle } from "@/components/ThemeToggle";
+import { SignOutButton } from "@/components/SignOutButton";
 import { signOutAction } from "@/app/actions/auth";
 
 const navItems = [
@@ -74,16 +73,5 @@ export function Navigation() {
         })}
       </nav>
     </>
-  );
-}
-
-function SignOutButton() {
-  const { pending } = useFormStatus();
-
-  return (
-    <Button type="submit" variant="ghost" size="sm" disabled={pending}>
-      {pending ? <Loader2 className="size-4 animate-spin" /> : <LogOut className="size-4" />}
-      ログアウト
-    </Button>
   );
 }

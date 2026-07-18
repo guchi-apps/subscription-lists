@@ -3,6 +3,8 @@ import { db } from "@/lib/db";
 import { MasterManager } from "@/components/MasterManager";
 import { LabelManager } from "@/components/LabelManager";
 import { AppVersionInfo } from "@/components/AppVersionInfo";
+import { SignOutButton } from "@/components/SignOutButton";
+import { signOutAction } from "@/app/actions/auth";
 import { CHANGELOG } from "@/lib/changelog";
 import packageJson from "../../../../package.json";
 
@@ -31,6 +33,12 @@ export default async function SettingsPage() {
         initialItems={JSON.parse(JSON.stringify(paymentMethods))}
       />
       <LabelManager initialLabels={JSON.parse(JSON.stringify(labels))} />
+      <div className="space-y-4">
+        <h2 className="text-sm font-semibold text-muted-foreground">アカウント</h2>
+        <form action={signOutAction}>
+          <SignOutButton />
+        </form>
+      </div>
       <AppVersionInfo version={packageJson.version} changelog={CHANGELOG} />
     </div>
   );
