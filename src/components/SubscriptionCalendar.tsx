@@ -192,6 +192,9 @@ export function SubscriptionCalendar({
               </DialogHeader>
               <div className="space-y-1 text-sm text-muted-foreground">
                 <p>支払い方法: {selected.subscription.paymentMethod.name}</p>
+                {selected.subscription.endDate === null && !selected.subscription.autoRenew && (
+                  <p className="text-destructive">解約予定(契約終了日が未定のため、解約手続きが必要です)</p>
+                )}
               </div>
             </>
           )}
@@ -238,17 +241,26 @@ function CalendarDayCell({
           {day.date.getDate()}
         </span>
         <div className="flex min-h-0 flex-1 flex-col gap-0.5 overflow-hidden">
-          {visibleEvents.map((event, index) => (
-            <button
-              key={`${event.subscription.id}_${index}`}
-              type="button"
-              onClick={() => onSelectEvent(event)}
-              className="truncate rounded-md bg-primary/10 px-1.5 py-0.5 text-left text-[11px] leading-tight text-primary transition-colors hover:bg-primary/20"
-              title={event.subscription.name}
-            >
-              {event.subscription.name}
-            </button>
-          ))}
+          {visibleEvents.map((event, index) => {
+            const pendingCancellation =
+              event.subscription.endDate === null && !event.subscription.autoRenew;
+            return (
+              <button
+                key={`${event.subscription.id}_${index}`}
+                type="button"
+                onClick={() => onSelectEvent(event)}
+                className={cn(
+                  "truncate rounded-md px-1.5 py-0.5 text-left text-[11px] leading-tight transition-colors",
+                  pendingCancellation
+                    ? "bg-destructive/10 text-destructive hover:bg-destructive/20"
+                    : "bg-primary/10 text-primary hover:bg-primary/20"
+                )}
+                title={event.subscription.name}
+              >
+                {event.subscription.name}
+              </button>
+            );
+          })}
           {hiddenCount > 0 && (
             <span className="px-1.5 text-[11px] text-muted-foreground">他{hiddenCount}件</span>
           )}
