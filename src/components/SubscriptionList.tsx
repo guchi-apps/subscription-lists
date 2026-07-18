@@ -148,6 +148,14 @@ export function SubscriptionList({
   );
   const hasHiddenEnded = !includeEnded && rows.length < allRows.length;
 
+  const totalMonthlyJpy = useMemo(
+    () =>
+      allRows
+        .filter(({ status }) => status !== "ENDED")
+        .reduce((sum, row) => sum + row.monthlyJpyAmount, 0),
+    [allRows]
+  );
+
   const selectedRow = rows.find((row) => row.sub.id === selectedId) ?? null;
 
   async function handleDelete(id: string) {
@@ -167,6 +175,11 @@ export function SubscriptionList({
 
   return (
     <div className="space-y-4">
+      <div className="flex items-baseline gap-2">
+        <span className="text-sm text-muted-foreground">月あたり合計</span>
+        <span className="text-2xl font-bold">{Math.round(totalMonthlyJpy).toLocaleString()}円</span>
+      </div>
+
       <div className="flex items-center justify-between gap-2 sm:gap-4">
         <div className="flex items-center gap-2">
           <Label htmlFor="sort-key" className="text-sm font-normal text-muted-foreground">
