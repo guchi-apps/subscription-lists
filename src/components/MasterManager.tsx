@@ -20,6 +20,12 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import { Card, CardContent } from "@/components/ui/card";
+import {
+  Collapsible,
+  CollapsibleContent,
+  CollapsibleTrigger,
+} from "@/components/ui/collapsible";
+import { cn } from "@/lib/utils";
 import type { MasterDTO } from "@/types";
 
 const masterFormSchema = z.object({
@@ -40,6 +46,7 @@ export function MasterManager({
 }) {
   const router = useRouter();
   const [items, setItems] = useState(initialItems);
+  const [sectionOpen, setSectionOpen] = useState(false);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editingItem, setEditingItem] = useState<MasterDTO | null>(null);
   const [togglingId, setTogglingId] = useState<string | null>(null);
@@ -69,7 +76,9 @@ export function MasterManager({
 
   async function handleToggleActive(item: MasterDTO) {
     setTogglingId(item.id);
-    setItems((prev) => prev.map((i) => (i.id === item.id ? { ...i, isActive: !i.isActive } : i)));
+    setItems((prev) =>
+      prev.map((i) => (i.id === item.id ? { ...i, isActive: !i.isActive } : i)),
+    );
     try {
       await fetch(`${apiBasePath}/${item.id}`, {
         method: "PUT",
@@ -152,87 +161,131 @@ export function MasterManager({
   }
 
   return (
-    <div className="space-y-4">
-      <div className="flex items-center justify-between">
-        <h2 className="text-sm font-semibold text-muted-foreground">{title}</h2>
-        <Dialog
-          open={dialogOpen}
-          onOpenChange={(open) => {
-            setDialogOpen(open);
-            if (!open) setEditingItem(null);
-          }}
+    <Card>
+      <CardContent>
+        <Collapsible
+          open={sectionOpen}
+          onOpenChange={setSectionOpen}
+          className="space-y-4"
         >
-          <DialogTrigger asChild>
-            <Button size="sm" onClick={openCreateDialog}>
-              <Plus className="size-4" />
-              {addLabel}
-            </Button>
-          </DialogTrigger>
-          <DialogContent>
-            <DialogHeader>
-              <DialogTitle>{editingItem ? `${title}を編集` : `${title}を追加`}</DialogTitle>
-            </DialogHeader>
-            <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-              <div className="space-y-1.5">
-                <Label htmlFor="name">名称</Label>
-                <Input id="name" {...register("name")} />
-                {errors.name && <p className="text-sm text-destructive">{errors.name.message}</p>}
-              </div>
-              <Button type="submit" className="w-full" disabled={isSubmitting}>
-                {isSubmitting && <Loader2 className="size-4 animate-spin" />}
-                {editingItem ? "更新する" : "追加する"}
-              </Button>
-            </form>
-          </DialogContent>
-        </Dialog>
-      </div>
-
-      {items.length === 0 ? (
-        <p className="text-sm text-muted-foreground">まだ登録されていません。</p>
-      ) : (
-        <div className="space-y-2">
-          {items.map((item, index) => (
-            <Card key={item.id}>
-              <CardContent className="flex items-center gap-3">
-                <div className="flex flex-col">
-                  <button
-                    type="button"
-                    onClick={() => handleMove(index, "up")}
-                    disabled={index === 0 || movingId !== null}
-                    className="text-muted-foreground hover:text-foreground disabled:pointer-events-none disabled:opacity-30"
-                    aria-label="上に移動"
-                  >
-                    <ChevronUp className="size-4" />
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => handleMove(index, "down")}
-                    disabled={index === items.length - 1 || movingId !== null}
-                    className="text-muted-foreground hover:text-foreground disabled:pointer-events-none disabled:opacity-30"
-                    aria-label="下に移動"
-                  >
-                    <ChevronDown className="size-4" />
-                  </button>
-                </div>
-                <p className="flex-1 font-medium">{item.name}</p>
-                <button
-                  type="button"
-                  onClick={() => openEditDialog(item)}
-                  className="text-muted-foreground hover:text-foreground"
-                  aria-label="編集"
-                >
-                  <Pencil className="size-4" />
-                </button>
-                {togglingId === item.id ? (
-                  <Loader2 className="size-4 animate-spin text-muted-foreground" />
-                ) : (
-                  <Switch checked={item.isActive} onCheckedChange={() => handleToggleActive(item)} />
+          <CollapsibleTrigger asChild>
+            <button
+              type="button"
+              className="flex w-full items-center justify-between gap-2 text-left"
+            >
+              <h2 className="text-sm font-semibold text-muted-foreground">
+                {title}
+              </h2>
+              <ChevronDown
+                className={cn(
+                  "size-4 text-muted-foreground transition-transform",
+                  sectionOpen && "rotate-180",
                 )}
-              </CardContent>
-            </Card>
-          ))}
-        </div>
-      )}
-    </div>
+              />
+            </button>
+          </CollapsibleTrigger>
+          <CollapsibleContent className="space-y-4">
+            <div className="flex justify-end">
+              <Dialog
+                open={dialogOpen}
+                onOpenChange={(open) => {
+                  setDialogOpen(open);
+                  if (!open) setEditingItem(null);
+                }}
+              >
+                <DialogTrigger asChild>
+                  <Button size="sm" onClick={openCreateDialog}>
+                    <Plus className="size-4" />
+                    {addLabel}
+                  </Button>
+                </DialogTrigger>
+                <DialogContent>
+                  <DialogHeader>
+                    <DialogTitle>
+                      {editingItem ? `${title}を編集` : `${title}を追加`}
+                    </DialogTitle>
+                  </DialogHeader>
+                  <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+                    <div className="space-y-1.5">
+                      <Label htmlFor="name">名称</Label>
+                      <Input id="name" {...register("name")} />
+                      {errors.name && (
+                        <p className="text-sm text-destructive">
+                          {errors.name.message}
+                        </p>
+                      )}
+                    </div>
+                    <Button
+                      type="submit"
+                      className="w-full"
+                      disabled={isSubmitting}
+                    >
+                      {isSubmitting && (
+                        <Loader2 className="size-4 animate-spin" />
+                      )}
+                      {editingItem ? "更新する" : "追加する"}
+                    </Button>
+                  </form>
+                </DialogContent>
+              </Dialog>
+            </div>
+
+            {items.length === 0 ? (
+              <p className="text-sm text-muted-foreground">
+                まだ登録されていません。
+              </p>
+            ) : (
+              <div className="space-y-2">
+                {items.map((item, index) => (
+                  <Card key={item.id}>
+                    <CardContent className="flex items-center gap-3">
+                      <div className="flex flex-col">
+                        <button
+                          type="button"
+                          onClick={() => handleMove(index, "up")}
+                          disabled={index === 0 || movingId !== null}
+                          className="text-muted-foreground hover:text-foreground disabled:pointer-events-none disabled:opacity-30"
+                          aria-label="上に移動"
+                        >
+                          <ChevronUp className="size-4" />
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => handleMove(index, "down")}
+                          disabled={
+                            index === items.length - 1 || movingId !== null
+                          }
+                          className="text-muted-foreground hover:text-foreground disabled:pointer-events-none disabled:opacity-30"
+                          aria-label="下に移動"
+                        >
+                          <ChevronDown className="size-4" />
+                        </button>
+                      </div>
+                      <p className="flex-1 font-medium">{item.name}</p>
+                      <button
+                        type="button"
+                        onClick={() => openEditDialog(item)}
+                        className="text-muted-foreground hover:text-foreground"
+                        aria-label="編集"
+                      >
+                        <Pencil className="size-4" />
+                      </button>
+                      {togglingId === item.id ? (
+                        <Loader2 className="size-4 animate-spin text-muted-foreground" />
+                      ) : (
+                        <Switch
+                          checked={item.isActive}
+                          onCheckedChange={() => handleToggleActive(item)}
+                        />
+                      )}
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
+            )}
+          </CollapsibleContent>
+        </Collapsible>
+      </CardContent>
+    </Card>
   );
 }

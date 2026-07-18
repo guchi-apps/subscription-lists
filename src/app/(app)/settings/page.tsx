@@ -4,6 +4,7 @@ import { MasterManager } from "@/components/MasterManager";
 import { LabelManager } from "@/components/LabelManager";
 import { AppVersionInfo } from "@/components/AppVersionInfo";
 import { SignOutButton } from "@/components/SignOutButton";
+import { Card, CardContent } from "@/components/ui/card";
 import { signOutAction } from "@/app/actions/auth";
 import { CHANGELOG } from "@/lib/changelog";
 import packageJson from "../../../../package.json";
@@ -24,7 +25,7 @@ export default async function SettingsPage() {
   ]);
 
   return (
-    <div className="mx-auto max-w-2xl space-y-8">
+    <div className="mx-auto max-w-2xl space-y-4">
       <h1 className="text-xl font-semibold">設定</h1>
       <MasterManager
         title="支払い方法"
@@ -33,12 +34,16 @@ export default async function SettingsPage() {
         initialItems={JSON.parse(JSON.stringify(paymentMethods))}
       />
       <LabelManager initialLabels={JSON.parse(JSON.stringify(labels))} />
-      <div className="space-y-4">
-        <h2 className="text-sm font-semibold text-muted-foreground">アカウント</h2>
-        <form action={signOutAction}>
-          <SignOutButton />
-        </form>
-      </div>
+      <Card>
+        <CardContent className="space-y-4">
+          <h2 className="text-sm font-semibold text-muted-foreground">
+            アカウント
+          </h2>
+          <form action={signOutAction}>
+            <SignOutButton />
+          </form>
+        </CardContent>
+      </Card>
       <AppVersionInfo version={packageJson.version} changelog={CHANGELOG} />
     </div>
   );
