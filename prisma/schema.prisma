@@ -59,6 +59,7 @@ model User {
   subscriptions  Subscription[]
   paymentMethods PaymentMethod[]
   labels         Label[]
+  bonusPeriod    BonusPeriod?
 }
 
 // --- Application models ---
@@ -155,4 +156,39 @@ model SubscriptionPrice {
 
   @@unique([subscriptionId, effectiveFrom])
   @@index([subscriptionId, effectiveFrom])
+}
+
+// 三井住友カードの年間利用額ボーナス(例: 年間100万円利用で1万ポイント)の進捗を手動記録で追跡する。
+// ユーザーごとにアクティブな期間は1つのみで、起算日はいつでも編集できる。
+model BonusPeriod {
+  id     String @id @default(cuid())
+  userId String @unique
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  startDate     DateTime @db.Date // 集計期間の開始日(自由に編集可能)
+  targetAmount  Decimal  @default(1000000) @db.Decimal(10, 2) // ボーナス達成に必要な利用額
+  bonusPoints   Int      @default(10000) // 達成時に付与されるボーナスポイント
+  pointEarnRate Decimal  @default(0.0050) @db.Decimal(6, 4) // 通常ポイント付与率(例: 0.0050 = 0.5%)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  entries BonusSpendEntry[]
+}
+
+// 期間内累計利用額のスナップショット。ユーザーがSMBCカードアプリ等で確認した値を都度記録する。
+model BonusSpendEntry {
+  id       String      @id @default(cuid())
+  periodId String
+  period   BonusPeriod @relation(fields: [periodId], references: [id], onDelete: Cascade)
+
+  recordedAt       DateTime @db.Date // このスナップショットの基準日
+  cumulativeAmount Decimal  @db.Decimal(10, 2) // その時点での期間内累計利用額
+  memo             String?  @db.Text
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([periodId, recordedAt])
+  @@index([periodId, recordedAt])
 }
