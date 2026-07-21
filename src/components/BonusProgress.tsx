@@ -390,6 +390,14 @@ export function BonusProgress({ initialPeriod }: { initialPeriod: BonusPeriodDTO
             <Badge variant={STATUS_BADGE_VARIANT[summary.status]}>{STATUS_LABEL[summary.status]}</Badge>
           </div>
 
+          <div className="flex items-baseline justify-between">
+            <span className="text-sm text-muted-foreground">経過日数</span>
+            <span className="text-sm font-medium">
+              {summary.daysElapsed}日 / {summary.daysElapsed + summary.daysRemaining}日
+            </span>
+          </div>
+          <Progress value={summary.dateProgressRatio * 100} indicatorClassName="bg-amber-500" />
+
           <div className="grid grid-cols-2 gap-4 border-t pt-4 sm:grid-cols-3">
             <Stat label="合計ポイント" value={`${summary.totalPoints.toLocaleString()} pt`} />
             <Stat label="通常ポイント" value={`${summary.regularPoints.toLocaleString()} pt`} />
