@@ -1,0 +1,64 @@
+name: Resolve Failed Migration (one-off)
+
+on:
+  workflow_dispatch:
+    inputs:
+      migration_name:
+        description: "Prisma migration directory name to resolve"
+        required: true
+        default: "20260721074528_add_bonus_tracking"
+      resolution:
+        description: "How to mark the migration"
+        required: true
+        default: "rolled-back"
+        type: choice
+        options:
+          - rolled-back
+          - applied
+
+jobs:
+  resolve:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Load secrets from 1Password
+        uses: 1password/load-secrets-action@v4
+        with:
+          export-env: true
+        env:
+          OP_SERVICE_ACCOUNT_TOKEN: ${{ secrets.OP_SERVICE_ACCOUNT_TOKEN }}
+          OP_ENV_FILE: .github/deploy.env.tpl
+
+      - name: Install SSH key
+        uses: shimataro/ssh-key-action@v2
+        with:
+          key: ${{ env.SSH_PRIVATE_KEY }}
+          known_hosts: placeholder
+          if_key_exists: replace
+
+      - name: Add known hosts
+        run: ssh-keyscan -p "${SSH_PORT}" -H "${HOST}" >> ~/.ssh/known_hosts
+        env:
+          HOST: ${{ env.HOST }}
+          SSH_PORT: ${{ env.SSH_PORT }}
+
+      - name: Resolve migration on server
+        uses: appleboy/ssh-action@v1
+        env:
+          MIGRATION_NAME: ${{ inputs.migration_name }}
+          RESOLUTION: ${{ inputs.resolution }}
+          TARGET_DIR: ${{ env.TARGET_DIR }}
+        with:
+          host: ${{ env.HOST }}
+          username: ${{ env.USERNAME }}
+          key: ${{ env.SSH_PRIVATE_KEY }}
+          port: ${{ env.SSH_PORT }}
+          envs: MIGRATION_NAME,RESOLUTION,TARGET_DIR
+          script: |
+            set -euo pipefail
+            cd "${TARGET_DIR}"
+            npx prisma migrate resolve --${RESOLUTION} "${MIGRATION_NAME}"
+            npx prisma migrate status
