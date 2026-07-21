@@ -50,6 +50,13 @@ export function getProgressRatio(currentAmount: number, targetAmount: number): n
   return Math.min(1, Math.max(0, currentAmount / targetAmount));
 }
 
+/** 期間内の日付経過割合(0〜1)。経過日数 / (経過日数 + 残り日数) */
+export function getDateProgressRatio(daysElapsed: number, daysRemaining: number): number {
+  const totalDays = daysElapsed + daysRemaining;
+  if (totalDays <= 0) return 0;
+  return Math.min(1, Math.max(0, daysElapsed / totalDays));
+}
+
 export type BonusStatus = "IN_PROGRESS" | "EARNED" | "MISSED";
 
 export function getBonusStatus(currentAmount: number, targetAmount: number, daysRemaining: number): BonusStatus {
@@ -87,6 +94,7 @@ export interface BonusSummary {
   bonusEarned: boolean;
   requiredDailyPace: number | null;
   progressRatio: number;
+  dateProgressRatio: number;
   status: BonusStatus;
 }
 
@@ -109,6 +117,7 @@ export function getBonusSummary(
     bonusEarned: isBonusEarned(currentAmount, period.targetAmount),
     requiredDailyPace: getRequiredDailyPace(remainingAmount, daysRemaining),
     progressRatio: getProgressRatio(currentAmount, period.targetAmount),
+    dateProgressRatio: getDateProgressRatio(getDaysElapsed(period.startDate, today), daysRemaining),
     status: getBonusStatus(currentAmount, period.targetAmount, daysRemaining),
   };
 }
