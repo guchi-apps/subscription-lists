@@ -13,7 +13,7 @@ const navItems = [
   { href: "/subscriptions", label: "一覧", icon: ListChecks },
   { href: "/calendar", label: "カレンダー", icon: CalendarDays },
   { href: "/timeline", label: "タイムライン", icon: ChartGantt },
-  { href: "/bonus", label: "ボーナス", icon: Gift },
+  { href: "/bonus", label: "カード", icon: Gift },
   { href: "/settings", label: "設定", icon: Settings },
 ];
 
