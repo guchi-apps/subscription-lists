@@ -8,6 +8,13 @@ export type ChangelogEntry = {
 
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    version: "0.4.1",
+    date: "2026-07-21",
+    changes: [
+      "「カード」画面の利用額進捗バーの下に、期間の経過日数を示す進捗バーを追加",
+    ],
+  },
+  {
     version: "0.4.0",
     date: "2026-07-21",
     changes: [
