@@ -53,3 +53,25 @@ export type LabelDTO = {
   createdAt: string;
   updatedAt: string;
 };
+
+export type BonusSpendEntryDTO = {
+  id: string;
+  periodId: string;
+  recordedAt: string;
+  cumulativeAmount: string;
+  memo: string | null;
+  createdAt: string;
+  updatedAt: string;
+};
+
+export type BonusPeriodDTO = {
+  id: string;
+  userId: string;
+  startDate: string;
+  targetAmount: string;
+  bonusPoints: number;
+  pointEarnRate: string;
+  createdAt: string;
+  updatedAt: string;
+  entries: BonusSpendEntryDTO[];
+};
