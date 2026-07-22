@@ -178,12 +178,12 @@ function BonusEntryForm({
   return (
     <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
       <div className="grid grid-cols-2 gap-4">
-        <div className="space-y-1.5">
+        <div className="min-w-0 space-y-1.5">
           <FieldLabel htmlFor={`${idPrefix}-recordedAt`}>記録日</FieldLabel>
           <Input id={`${idPrefix}-recordedAt`} type="date" {...register("recordedAt")} />
           {errors.recordedAt && <p className="text-sm text-destructive">{errors.recordedAt.message}</p>}
         </div>
-        <div className="space-y-1.5">
+        <div className="min-w-0 space-y-1.5">
           <FieldLabel htmlFor={`${idPrefix}-cumulativeAmount`}>累計利用額(円)</FieldLabel>
           <Input
             id={`${idPrefix}-cumulativeAmount`}
