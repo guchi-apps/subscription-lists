@@ -12,7 +12,7 @@ import { Loader2, Plus } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Input } from "@/components/ui/input";
+import { Input, LINE_INPUT_CLASS } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import {
@@ -60,10 +60,6 @@ const newSubscriptionSchema = formSchema.refine((data) => data.amount !== undefi
 });
 
 type SubscriptionFormValues = z.infer<typeof formSchema>;
-
-// 枠で囲む代わりに下線だけで入力欄を区切る、このフォーム専用の見た目
-const LINE_INPUT_CLASS =
-  "rounded-none border-x-0 border-t-0 border-b border-input bg-transparent px-0 focus-visible:ring-0 focus-visible:border-b-2 focus-visible:border-ring disabled:bg-transparent dark:bg-transparent dark:disabled:bg-transparent";
 const LINE_SELECT_TRIGGER_CLASS =
   "rounded-none border-x-0 border-t-0 border-b border-input bg-transparent pl-0 focus-visible:ring-0 focus-visible:border-b-2 focus-visible:border-ring dark:bg-transparent dark:hover:bg-transparent";
 

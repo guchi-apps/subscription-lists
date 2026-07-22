@@ -9,7 +9,7 @@ import { toast } from "sonner";
 import { Loader2, Pencil, Trash2 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
+import { Input, LINE_INPUT_CLASS } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label as FieldLabel } from "@/components/ui/label";
 import { Card, CardContent } from "@/components/ui/card";
@@ -112,7 +112,7 @@ function BonusPeriodForm({
     <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
       <div className="space-y-1.5">
         <FieldLabel htmlFor="startDate">起算日</FieldLabel>
-        <Input id="startDate" type="date" {...register("startDate")} />
+        <Input id="startDate" type="date" className={LINE_INPUT_CLASS} {...register("startDate")} />
         {errors.startDate && <p className="text-sm text-destructive">{errors.startDate.message}</p>}
       </div>
       <div className="space-y-1.5">
@@ -177,13 +177,18 @@ function BonusEntryForm({
 
   return (
     <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-      <div className="grid grid-cols-2 gap-4">
-        <div className="min-w-0 space-y-1.5">
+      <div className="space-y-4">
+        <div className="space-y-1.5">
           <FieldLabel htmlFor={`${idPrefix}-recordedAt`}>記録日</FieldLabel>
-          <Input id={`${idPrefix}-recordedAt`} type="date" {...register("recordedAt")} />
+          <Input
+            id={`${idPrefix}-recordedAt`}
+            type="date"
+            className={LINE_INPUT_CLASS}
+            {...register("recordedAt")}
+          />
           {errors.recordedAt && <p className="text-sm text-destructive">{errors.recordedAt.message}</p>}
         </div>
-        <div className="min-w-0 space-y-1.5">
+        <div className="space-y-1.5">
           <FieldLabel htmlFor={`${idPrefix}-cumulativeAmount`}>累計利用額(円)</FieldLabel>
           <Input
             id={`${idPrefix}-cumulativeAmount`}
