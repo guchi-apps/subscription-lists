@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { ListChecks, CalendarDays, ChartGantt, Gift, Settings, Wallet } from "lucide-react";
+import { ListChecks, CalendarDays, ChartGantt, CreditCard, Settings, Wallet } from "lucide-react";
 
 import { cn } from "@/lib/utils";
 import { ThemeToggle } from "@/components/ThemeToggle";
@@ -13,7 +13,7 @@ const navItems = [
   { href: "/subscriptions", label: "一覧", icon: ListChecks },
   { href: "/calendar", label: "カレンダー", icon: CalendarDays },
   { href: "/timeline", label: "タイムライン", icon: ChartGantt },
-  { href: "/bonus", label: "カード", icon: Gift },
+  { href: "/card", label: "カード", icon: CreditCard },
   { href: "/settings", label: "設定", icon: Settings },
 ];
 
