@@ -3,7 +3,7 @@ import withPWAInit from "@ducanh2912/next-pwa";
 
 const devAllowedOrigins = [
   "*.sslip.io",
-  // Cloudflare Tunnel (signaly-dev) 経由の外出先アクセス用
+  // Cloudflare Tunnel (dev-tunnel) 経由の外出先アクセス用
   "*.minagu.work",
   ...(process.env.DEV_ALLOWED_ORIGINS?.split(",")
     .map((origin) => origin.trim())

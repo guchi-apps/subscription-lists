@@ -75,3 +75,29 @@ export type BonusPeriodDTO = {
   updatedAt: string;
   entries: BonusSpendEntryDTO[];
 };
+
+export type CardBrand = "VISA" | "MASTERCARD" | "JCB" | "AMEX" | "DINERS" | "OTHER";
+export type CardUsageStatus =
+  | "MAIN"
+  | "SUB"
+  | "HOLDING_ONLY"
+  | "CONSIDERING_CANCELLATION"
+  | "CANCELLED";
+
+export type CreditCardDTO = {
+  id: string;
+  userId: string;
+  name: string;
+  displayOrder: number;
+  brand: CardBrand;
+  usageStatus: CardUsageStatus;
+  pointRate: string | null;
+  billingDay: number | null;
+  billingAccount: string | null;
+  annualFee: string | null;
+  creditLimit: string | null;
+  benefits: string | null;
+  memo: string | null;
+  createdAt: string;
+  updatedAt: string;
+};

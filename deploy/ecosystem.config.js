@@ -3,7 +3,7 @@ const path = require("node:path");
 module.exports = {
   apps: [
     {
-      name: "subscribe-lists",
+      name: "subscription-lists",
       script: "node_modules/next/dist/bin/next",
       args: "start",
       cwd: path.resolve(__dirname, ".."),
