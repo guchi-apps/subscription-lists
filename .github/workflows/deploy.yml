@@ -252,6 +252,7 @@ jobs:
             echo "Restarting PM2..."
             if command -v pm2 >/dev/null 2>&1; then
               pm2 delete subscribe-lists 2>/dev/null || true
+              pm2 delete subscription-lists 2>/dev/null || true
               PORT="$PORT" pm2 start deploy/ecosystem.config.js --env production
               pm2 save
             else
