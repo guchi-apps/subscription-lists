@@ -42,18 +42,18 @@ Google OAuth を使う場合は、開発用の Google Cloud クライアント�
 `npm run dev` 起動時に、以下のアクセス経路がコンソールに表示される。
 
 - **LAN 内**: `http://<LAN-IP>.sslip.io:3000`（同じ Wi-Fi 上のスマホ等から）
-- **外出先**: `https://subscribe-dev.minagu.work`（Cloudflare Tunnel 経由。共有トンネル `signaly-dev` に相乗り）
+- **外出先**: `https://subscribe-dev.minagu.work`（Cloudflare Tunnel 経由。共有トンネル `dev-tunnel` に相乗り）
 
 いずれも `next.config.ts` の `allowedDevOrigins`（`*.sslip.io` / `*.minagu.work`）でクロスオリジンリクエストを許可している。
 
 **外出先からのアクセス（Cloudflare Tunnel）**
 
-`npm run dev`（`scripts/dev-wsl-lan.sh`）が、共有 Named Tunnel `signaly-dev` が未起動なら自動で起動する（他アプリの dev サーバーで既に起動済みならそのまま利用、二重起動はしない）。起動ログは `/tmp/cloudflared-signaly-dev.log`。
+`npm run dev`（`scripts/dev-wsl-lan.sh`）が、共有 Named Tunnel `dev-tunnel` が未起動なら自動で起動する（他アプリの dev サーバーで既に起動済みならそのまま利用、二重起動はしない）。起動ログは `/tmp/cloudflared-dev-tunnel.log`。
 
 自動起動に失敗した場合は手動で起動する:
 
 ```bash
-cloudflared tunnel run signaly-dev
+cloudflared tunnel run dev-tunnel
 ```
 
 （Cloudflare 側のトンネル・DNS 設定はこのリポジトリの管理外。`~/.cloudflared/config.yml` にホスト設定済み）

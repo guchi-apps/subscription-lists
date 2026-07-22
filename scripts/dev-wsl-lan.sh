@@ -73,10 +73,10 @@ print_phone_urls() {
 }
 
 is_cloudflare_tunnel_running() {
-  pgrep -f "cloudflared .*tunnel run signaly-dev" >/dev/null 2>&1
+  pgrep -f "cloudflared .*tunnel run dev-tunnel" >/dev/null 2>&1
 }
 
-# signaly-dev は複数アプリ(asset-manager, subscription-lists 等)で共有している
+# dev-tunnel は複数アプリ(asset-manager, subscription-lists 等)で共有している
 # Named Tunnel。他アプリの dev.sh から既に起動済みなら何もしない。
 ensure_cloudflare_tunnel() {
   if ! command -v cloudflared >/dev/null 2>&1; then
@@ -87,10 +87,10 @@ ensure_cloudflare_tunnel() {
     return 0
   fi
 
-  echo "共有 Cloudflare Tunnel (signaly-dev) を起動しています..."
+  echo "共有 Cloudflare Tunnel (dev-tunnel) を起動しています..."
   # WSL で IPv6 が不通だと名前解決がタイムアウトすることがあるため cgo resolver を使う
-  GODEBUG=netdns=cgo nohup cloudflared --no-autoupdate tunnel run signaly-dev \
-    >/tmp/cloudflared-signaly-dev.log 2>&1 &
+  GODEBUG=netdns=cgo nohup cloudflared --no-autoupdate tunnel run dev-tunnel \
+    >/tmp/cloudflared-dev-tunnel.log 2>&1 &
   disown
 
   for _ in $(seq 1 10); do
@@ -99,9 +99,9 @@ ensure_cloudflare_tunnel() {
   done
 
   if is_cloudflare_tunnel_running; then
-    echo "起動しました（ログ: /tmp/cloudflared-signaly-dev.log）"
+    echo "起動しました（ログ: /tmp/cloudflared-dev-tunnel.log）"
   else
-    echo "Warning: Cloudflare Tunnel の起動に失敗しました。/tmp/cloudflared-signaly-dev.log を確認してください。"
+    echo "Warning: Cloudflare Tunnel の起動に失敗しました。/tmp/cloudflared-dev-tunnel.log を確認してください。"
   fi
   echo ""
 }
