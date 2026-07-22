@@ -82,3 +82,21 @@ export const UpdateLabelSchema = z.object({
   color: labelColorSchema.optional(),
 });
 export type UpdateLabel = z.infer<typeof UpdateLabelSchema>;
+
+export const BonusPeriodSchema = z.object({
+  startDate: z.string().min(1, "開始日は必須です"),
+  targetAmount: z.number().positive("正の数値を入力してください").default(1000000),
+  bonusPoints: z.number().int().nonnegative("0以上の整数を入力してください").default(10000),
+  pointEarnRate: z.number().min(0, "0以上を入力してください").max(1, "1以下(小数)で入力してください").default(0.005),
+});
+export type BonusPeriodInput = z.infer<typeof BonusPeriodSchema>;
+
+export const CreateBonusSpendEntrySchema = z.object({
+  recordedAt: z.string().min(1, "記録日は必須です"),
+  cumulativeAmount: z.number().nonnegative("0以上の数値を入力してください"),
+  memo: z.string().max(200).optional(),
+});
+export type CreateBonusSpendEntry = z.infer<typeof CreateBonusSpendEntrySchema>;
+
+export const UpdateBonusSpendEntrySchema = CreateBonusSpendEntrySchema.partial();
+export type UpdateBonusSpendEntry = z.infer<typeof UpdateBonusSpendEntrySchema>;
