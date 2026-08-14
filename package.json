@@ -1,6 +1,6 @@
 {
   "name": "subscription-lists",
-  "version": "0.5.1",
+  "version": "0.5.2",
   "private": true,
   "engines": {
     "node": ">=20.19.0"
