@@ -28,8 +28,9 @@ export default auth((req) => {
 
   const { pathname } = req.nextUrl;
 
-  // /api/* はルートハンドラ自身が requireUserId() で認証チェックし、
-  // 401 JSON を返す設計のため、proxy ではリダイレクトせず素通りさせる。
+  // /api/* はルートハンドラ自身が認証チェックし、401 JSON を返す設計のため、
+  // proxy ではリダイレクトせず素通りさせる。ユーザー向けAPIは requireUserId()、
+  // サーバー間参照用の /api/internal/* は requireInternalApiKey()(共有シークレット)で守る。
   if (pathname.startsWith("/api/")) {
     return NextResponse.next();
   }
