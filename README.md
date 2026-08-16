@@ -94,3 +94,7 @@ deploy/             # PM2 / Apache VirtualHost 設定
 
 「月当たりの金額」は保存せず、現在時点で有効な `SubscriptionPrice` から `src/lib/billing.ts` で都度計算する。
 「契約状況」（自動更新中/解約予定/解約済み）も保存せず、`endDate` と現在日時から都度判定する（未入力=自動更新中、未来日=解約予定、過去日=解約済み）。
+
+## サーバー間参照用 API
+
+同一VPS上の他アプリ（AIDE）が月額固定費と次の支払予定を取得するための `/api/internal/*` を用意している。認証は共有シークレット（`INTERNAL_API_KEY`）1本。仕様は [docs/internal-api.md](docs/internal-api.md) を参照。

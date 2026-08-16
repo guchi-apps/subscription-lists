@@ -109,6 +109,7 @@ jobs:
       DB_NAME: ${{ secrets.DB_NAME }}
       GOOGLE_CLIENT_ID: ${{ secrets.GOOGLE_CLIENT_ID }}
       GOOGLE_CLIENT_SECRET: ${{ secrets.GOOGLE_CLIENT_SECRET }}
+      INTERNAL_API_KEY: ${{ secrets.INTERNAL_API_KEY }}
       PORT: ${{ vars.PORT }}
       SIGNALY_LOGIN_WEBHOOK_URL: ${{ secrets.SIGNALY_LOGIN_WEBHOOK_URL }}
       SIGNALY_WEBHOOK_URL: ${{ secrets.SIGNALY_WEBHOOK_URL }}
@@ -187,6 +188,7 @@ jobs:
       DB_NAME: ${{ secrets.DB_NAME }}
       GOOGLE_CLIENT_ID: ${{ secrets.GOOGLE_CLIENT_ID }}
       GOOGLE_CLIENT_SECRET: ${{ secrets.GOOGLE_CLIENT_SECRET }}
+      INTERNAL_API_KEY: ${{ secrets.INTERNAL_API_KEY }}
       PORT: ${{ vars.PORT }}
       SIGNALY_LOGIN_WEBHOOK_URL: ${{ secrets.SIGNALY_LOGIN_WEBHOOK_URL }}
       SIGNALY_WEBHOOK_URL: ${{ secrets.SIGNALY_WEBHOOK_URL }}
@@ -241,6 +243,7 @@ jobs:
           GOOGLE_CLIENT_ID: ${{ env.GOOGLE_CLIENT_ID }}
           GOOGLE_CLIENT_SECRET: ${{ env.GOOGLE_CLIENT_SECRET }}
           ALLOWED_EMAIL: ${{ env.ALLOWED_EMAIL }}
+          INTERNAL_API_KEY: ${{ env.INTERNAL_API_KEY }}
           SIGNALY_LOGIN_WEBHOOK_URL: ${{ env.SIGNALY_LOGIN_WEBHOOK_URL }}
           TARGET_DIR: ${{ env.TARGET_DIR }}
           APP_PORT: ${{ env.PORT }}
@@ -249,7 +252,7 @@ jobs:
           username: ${{ env.USERNAME }}
           key: ${{ env.SSH_PRIVATE_KEY }}
           port: ${{ env.SSH_PORT }}
-          envs: DATABASE_URL,MIGRATE_DATABASE_URL,DB_USER,DB_PASSWORD,DB_HOST,DB_PORT,DB_NAME,AUTH_URL,AUTH_SECRET,GOOGLE_CLIENT_ID,GOOGLE_CLIENT_SECRET,ALLOWED_EMAIL,SIGNALY_LOGIN_WEBHOOK_URL,TARGET_DIR,APP_PORT
+          envs: DATABASE_URL,MIGRATE_DATABASE_URL,DB_USER,DB_PASSWORD,DB_HOST,DB_PORT,DB_NAME,AUTH_URL,AUTH_SECRET,GOOGLE_CLIENT_ID,GOOGLE_CLIENT_SECRET,ALLOWED_EMAIL,INTERNAL_API_KEY,SIGNALY_LOGIN_WEBHOOK_URL,TARGET_DIR,APP_PORT
           script: |
             set -euo pipefail
             cd "${TARGET_DIR}"
@@ -281,6 +284,9 @@ jobs:
             update_env GOOGLE_CLIENT_ID "$GOOGLE_CLIENT_ID"
             update_env GOOGLE_CLIENT_SECRET "$GOOGLE_CLIENT_SECRET"
             update_env ALLOWED_EMAIL "$ALLOWED_EMAIL"
+            # INTERNAL_API_KEY は1Password/GitHubへ未登録の期間があり得るため未設定を許容する
+            # （未設定なら /api/internal/* は 503 を返して無効になる。docs/internal-api.md）。
+            update_env INTERNAL_API_KEY "${INTERNAL_API_KEY:-}"
             update_env SIGNALY_LOGIN_WEBHOOK_URL "$SIGNALY_LOGIN_WEBHOOK_URL"
 
             echo "Installing production dependencies..."
