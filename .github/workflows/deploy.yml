@@ -110,7 +110,6 @@ jobs:
       GOOGLE_CLIENT_ID: ${{ secrets.GOOGLE_CLIENT_ID }}
       GOOGLE_CLIENT_SECRET: ${{ secrets.GOOGLE_CLIENT_SECRET }}
       INTERNAL_API_KEY: ${{ secrets.INTERNAL_API_KEY }}
-      PORT: ${{ vars.PORT }}
       SIGNALY_LOGIN_WEBHOOK_URL: ${{ secrets.SIGNALY_LOGIN_WEBHOOK_URL }}
       SIGNALY_WEBHOOK_URL: ${{ secrets.SIGNALY_WEBHOOK_URL }}
       TARGET_DIR: ${{ secrets.TARGET_DIR }}
@@ -189,7 +188,6 @@ jobs:
       GOOGLE_CLIENT_ID: ${{ secrets.GOOGLE_CLIENT_ID }}
       GOOGLE_CLIENT_SECRET: ${{ secrets.GOOGLE_CLIENT_SECRET }}
       INTERNAL_API_KEY: ${{ secrets.INTERNAL_API_KEY }}
-      PORT: ${{ vars.PORT }}
       SIGNALY_LOGIN_WEBHOOK_URL: ${{ secrets.SIGNALY_LOGIN_WEBHOOK_URL }}
       SIGNALY_WEBHOOK_URL: ${{ secrets.SIGNALY_WEBHOOK_URL }}
       TARGET_DIR: ${{ secrets.TARGET_DIR }}
@@ -246,18 +244,19 @@ jobs:
           INTERNAL_API_KEY: ${{ env.INTERNAL_API_KEY }}
           SIGNALY_LOGIN_WEBHOOK_URL: ${{ env.SIGNALY_LOGIN_WEBHOOK_URL }}
           TARGET_DIR: ${{ env.TARGET_DIR }}
-          APP_PORT: ${{ env.PORT }}
         with:
           host: ${{ env.HOST }}
           username: ${{ env.USERNAME }}
           key: ${{ env.SSH_PRIVATE_KEY }}
           port: ${{ env.SSH_PORT }}
-          envs: DATABASE_URL,MIGRATE_DATABASE_URL,DB_USER,DB_PASSWORD,DB_HOST,DB_PORT,DB_NAME,AUTH_URL,AUTH_SECRET,GOOGLE_CLIENT_ID,GOOGLE_CLIENT_SECRET,ALLOWED_EMAIL,INTERNAL_API_KEY,SIGNALY_LOGIN_WEBHOOK_URL,TARGET_DIR,APP_PORT
+          envs: DATABASE_URL,MIGRATE_DATABASE_URL,DB_USER,DB_PASSWORD,DB_HOST,DB_PORT,DB_NAME,AUTH_URL,AUTH_SECRET,GOOGLE_CLIENT_ID,GOOGLE_CLIENT_SECRET,ALLOWED_EMAIL,INTERNAL_API_KEY,SIGNALY_LOGIN_WEBHOOK_URL,TARGET_DIR
           script: |
             set -euo pipefail
             cd "${TARGET_DIR}"
 
-            PORT="${APP_PORT:-3107}"
+            # 待受ポートはシークレットではなく設定値として平文で持つ
+            # （guchi-apps/docs の standards/ports.md「ポート番号は 1Password で管理しない」。#83）。
+            PORT=3107
 
             echo "Cleaning up old release files..."
             rm -rf .next public package.json package-lock.json prisma deploy next.config.ts
