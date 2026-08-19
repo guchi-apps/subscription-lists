@@ -100,29 +100,3 @@ export type CreateBonusSpendEntry = z.infer<typeof CreateBonusSpendEntrySchema>;
 
 export const UpdateBonusSpendEntrySchema = CreateBonusSpendEntrySchema.partial();
 export type UpdateBonusSpendEntry = z.infer<typeof UpdateBonusSpendEntrySchema>;
-
-export const CardBrandEnum = z.enum(["VISA", "MASTERCARD", "JCB", "AMEX", "DINERS", "OTHER"]);
-export const CardUsageStatusEnum = z.enum([
-  "MAIN",
-  "SUB",
-  "HOLDING_ONLY",
-  "CONSIDERING_CANCELLATION",
-  "CANCELLED",
-]);
-
-export const CreateCreditCardSchema = z.object({
-  name: z.string().min(1, "カード名は必須です").max(50),
-  displayOrder: z.number().int().optional(),
-  brand: CardBrandEnum,
-  usageStatus: CardUsageStatusEnum.optional(),
-  pointRate: z.string().max(50).optional(),
-  billingDay: z.number().int().min(1).max(31).optional(),
-  billingAccount: z.string().max(100).optional(),
-  annualFee: z.number().nonnegative().optional(),
-  creditLimit: z.number().nonnegative().optional(),
-  benefits: z.string().optional(),
-  memo: z.string().optional(),
-});
-export type CreateCreditCard = z.infer<typeof CreateCreditCardSchema>;
-export const UpdateCreditCardSchema = CreateCreditCardSchema.partial();
-export type UpdateCreditCard = z.infer<typeof UpdateCreditCardSchema>;

@@ -1,30 +1,20 @@
-import Link from "next/link";
-import { Gift } from "lucide-react";
-
 import { requireUserId } from "@/lib/auth-user";
 import { db } from "@/lib/db";
-import { CreditCardManager } from "@/components/CreditCardManager";
-import { Button } from "@/components/ui/button";
+import { BonusProgress } from "@/components/BonusProgress";
 
-export default async function CreditCardsPage() {
+export default async function BonusProgressPage() {
   const userId = await requireUserId();
   if (!userId) return null;
 
-  const creditCards = await db.creditCard.findMany({
+  const period = await db.bonusPeriod.findUnique({
     where: { userId },
-    orderBy: { displayOrder: "asc" },
+    include: { entries: { orderBy: { recordedAt: "asc" } } },
   });
 
   return (
     <div className="mx-auto max-w-2xl space-y-4">
-      <h1 className="text-xl font-semibold">カード管理</h1>
-      <CreditCardManager initialItems={JSON.parse(JSON.stringify(creditCards))} />
-      <Button asChild variant="outline" className="w-full">
-        <Link href="/card/progress">
-          <Gift className="size-4" />
-          三井住友カード ボーナス進捗を見る
-        </Link>
-      </Button>
+      <h1 className="text-xl font-semibold">三井住友カード ボーナス進捗</h1>
+      <BonusProgress initialPeriod={period ? JSON.parse(JSON.stringify(period)) : null} />
     </div>
   );
 }
