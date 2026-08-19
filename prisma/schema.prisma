@@ -60,7 +60,6 @@ model User {
   paymentMethods PaymentMethod[]
   labels         Label[]
   bonusPeriod    BonusPeriod?
-  creditCards    CreditCard[]
 }
 
 // --- Application models ---
@@ -192,47 +191,4 @@ model BonusSpendEntry {
 
   @@unique([periodId, recordedAt])
   @@index([periodId, recordedAt])
-}
-
-enum CardBrand {
-  VISA
-  MASTERCARD
-  JCB
-  AMEX
-  DINERS
-  OTHER
-}
-
-enum CardUsageStatus {
-  MAIN // メイン
-  SUB // サブ
-  HOLDING_ONLY // 保有のみ
-  CONSIDERING_CANCELLATION // 解約検討中
-  CANCELLED // 解約済み
-}
-
-// クレジットカードそのものの管理台帳。PaymentMethod(サブスクの支払い方法選択肢)とは独立して持つ。
-model CreditCard {
-  id     String @id @default(cuid())
-  userId String
-  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
-
-  name         String // カード名
-  displayOrder Int             @default(0)
-  brand        CardBrand
-  usageStatus  CardUsageStatus @default(MAIN)
-
-  pointRate      String? // ポイント還元率(例: "1.0%", "誕生月2倍" 等の表記ゆれを許容するため文字列)
-  billingDay     Int? // 引き落とし日(1-31)
-  billingAccount String? // 引き落とし口座
-  annualFee      Decimal? @db.Decimal(10, 2) // 年会費
-  creditLimit    Decimal? @db.Decimal(10, 2) // 利用可能額
-  benefits       String?  @db.Text // 特典
-  memo           String?  @db.Text // 備考
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  @@unique([userId, name])
-  @@index([userId, displayOrder])
 }
