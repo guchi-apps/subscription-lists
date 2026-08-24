@@ -100,15 +100,14 @@ jobs:
       HOST: ${{ secrets.SERVER_HOST }}
       MIGRATE_DB_PASSWORD: ${{ secrets.SHARED_DB_MIGRATE_PASSWORD }}
       MIGRATE_DB_USER: ${{ secrets.SHARED_DB_MIGRATE_USER }}
+      NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY: ${{ vars.SUPABASE_PUBLISHABLE_KEY }}
+      NEXT_PUBLIC_SUPABASE_URL: ${{ vars.SUPABASE_PROJECT_URL }}
       SSH_PORT: ${{ secrets.SERVER_SSH_PORT }}
       SSH_PRIVATE_KEY: ${{ secrets.SERVER_SSH_PRIVATE_KEY }}
       USERNAME: ${{ secrets.SERVER_USERNAME }}
       ALLOWED_EMAIL: ${{ secrets.ALLOWED_EMAIL }}
-      AUTH_SECRET: ${{ secrets.AUTH_SECRET }}
       AUTH_URL: ${{ vars.AUTH_URL }}
       DB_NAME: ${{ secrets.DB_NAME }}
-      GOOGLE_CLIENT_ID: ${{ secrets.GOOGLE_CLIENT_ID }}
-      GOOGLE_CLIENT_SECRET: ${{ secrets.GOOGLE_CLIENT_SECRET }}
       INTERNAL_API_KEY: ${{ secrets.INTERNAL_API_KEY }}
       SIGNALY_LOGIN_WEBHOOK_URL: ${{ secrets.SIGNALY_LOGIN_WEBHOOK_URL }}
       SIGNALY_WEBHOOK_URL: ${{ secrets.SIGNALY_WEBHOOK_URL }}
@@ -135,10 +134,10 @@ jobs:
         env:
           NODE_ENV: production
           DATABASE_URL: ${{ env.DATABASE_URL }}
-          AUTH_URL: ${{ env.AUTH_URL }}
-          AUTH_SECRET: ${{ env.AUTH_SECRET }}
-          GOOGLE_CLIENT_ID: ${{ env.GOOGLE_CLIENT_ID }}
-          GOOGLE_CLIENT_SECRET: ${{ env.GOOGLE_CLIENT_SECRET }}
+          # NEXT_PUBLIC_* はビルド時にバンドルへ埋め込まれるため、ここで渡す必要がある
+          # （.env への書き込みだけでは反映されない）。
+          NEXT_PUBLIC_SUPABASE_URL: ${{ env.NEXT_PUBLIC_SUPABASE_URL }}
+          NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY: ${{ env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY }}
 
       - name: Create archive
         run: |
@@ -178,15 +177,14 @@ jobs:
       HOST: ${{ secrets.SERVER_HOST }}
       MIGRATE_DB_PASSWORD: ${{ secrets.SHARED_DB_MIGRATE_PASSWORD }}
       MIGRATE_DB_USER: ${{ secrets.SHARED_DB_MIGRATE_USER }}
+      NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY: ${{ vars.SUPABASE_PUBLISHABLE_KEY }}
+      NEXT_PUBLIC_SUPABASE_URL: ${{ vars.SUPABASE_PROJECT_URL }}
       SSH_PORT: ${{ secrets.SERVER_SSH_PORT }}
       SSH_PRIVATE_KEY: ${{ secrets.SERVER_SSH_PRIVATE_KEY }}
       USERNAME: ${{ secrets.SERVER_USERNAME }}
       ALLOWED_EMAIL: ${{ secrets.ALLOWED_EMAIL }}
-      AUTH_SECRET: ${{ secrets.AUTH_SECRET }}
       AUTH_URL: ${{ vars.AUTH_URL }}
       DB_NAME: ${{ secrets.DB_NAME }}
-      GOOGLE_CLIENT_ID: ${{ secrets.GOOGLE_CLIENT_ID }}
-      GOOGLE_CLIENT_SECRET: ${{ secrets.GOOGLE_CLIENT_SECRET }}
       INTERNAL_API_KEY: ${{ secrets.INTERNAL_API_KEY }}
       SIGNALY_LOGIN_WEBHOOK_URL: ${{ secrets.SIGNALY_LOGIN_WEBHOOK_URL }}
       SIGNALY_WEBHOOK_URL: ${{ secrets.SIGNALY_WEBHOOK_URL }}
@@ -236,10 +234,8 @@ jobs:
           DB_HOST: ${{ env.DB_HOST }}
           DB_PORT: ${{ env.DB_PORT }}
           DB_NAME: ${{ env.DB_NAME }}
-          AUTH_URL: ${{ env.AUTH_URL }}
-          AUTH_SECRET: ${{ env.AUTH_SECRET }}
-          GOOGLE_CLIENT_ID: ${{ env.GOOGLE_CLIENT_ID }}
-          GOOGLE_CLIENT_SECRET: ${{ env.GOOGLE_CLIENT_SECRET }}
+          NEXT_PUBLIC_SUPABASE_URL: ${{ env.NEXT_PUBLIC_SUPABASE_URL }}
+          NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY: ${{ env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY }}
           ALLOWED_EMAIL: ${{ env.ALLOWED_EMAIL }}
           INTERNAL_API_KEY: ${{ env.INTERNAL_API_KEY }}
           SIGNALY_LOGIN_WEBHOOK_URL: ${{ env.SIGNALY_LOGIN_WEBHOOK_URL }}
@@ -249,7 +245,7 @@ jobs:
           username: ${{ env.USERNAME }}
           key: ${{ env.SSH_PRIVATE_KEY }}
           port: ${{ env.SSH_PORT }}
-          envs: DATABASE_URL,MIGRATE_DATABASE_URL,DB_USER,DB_PASSWORD,DB_HOST,DB_PORT,DB_NAME,AUTH_URL,AUTH_SECRET,GOOGLE_CLIENT_ID,GOOGLE_CLIENT_SECRET,ALLOWED_EMAIL,INTERNAL_API_KEY,SIGNALY_LOGIN_WEBHOOK_URL,TARGET_DIR
+          envs: DATABASE_URL,MIGRATE_DATABASE_URL,DB_USER,DB_PASSWORD,DB_HOST,DB_PORT,DB_NAME,NEXT_PUBLIC_SUPABASE_URL,NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY,ALLOWED_EMAIL,INTERNAL_API_KEY,SIGNALY_LOGIN_WEBHOOK_URL,TARGET_DIR
           script: |
             set -euo pipefail
             cd "${TARGET_DIR}"
@@ -278,10 +274,8 @@ jobs:
             update_env DB_HOST "$DB_HOST"
             update_env DB_PORT "$DB_PORT"
             update_env DB_NAME "$DB_NAME"
-            update_env AUTH_URL "$AUTH_URL"
-            update_env AUTH_SECRET "$AUTH_SECRET"
-            update_env GOOGLE_CLIENT_ID "$GOOGLE_CLIENT_ID"
-            update_env GOOGLE_CLIENT_SECRET "$GOOGLE_CLIENT_SECRET"
+            update_env NEXT_PUBLIC_SUPABASE_URL "$NEXT_PUBLIC_SUPABASE_URL"
+            update_env NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY "$NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY"
             update_env ALLOWED_EMAIL "$ALLOWED_EMAIL"
             # INTERNAL_API_KEY は1Password/GitHubへ未登録の期間があり得るため未設定を許容する
             # （未設定なら /api/internal/* は 503 を返して無効になる。docs/internal-api.md）。

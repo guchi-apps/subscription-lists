@@ -1,16 +1,15 @@
-"use client";
-
-import { useFormStatus } from "react-dom";
-import { LogOut, Loader2 } from "lucide-react";
+import { LogOut } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 
+/**
+ * ログアウトボタン。`<form action="/auth/signout" method="post">` の中に置いて使う。
+ * サーバーアクションではなく素のフォーム送信なので、クライアントJSのハイドレーション前でも押せる。
+ */
 export function SignOutButton() {
-  const { pending } = useFormStatus();
-
   return (
-    <Button type="submit" variant="ghost" size="sm" disabled={pending}>
-      {pending ? <Loader2 className="size-4 animate-spin" /> : <LogOut className="size-4" />}
+    <Button type="submit" variant="ghost" size="sm">
+      <LogOut className="size-4" />
       ログアウト
     </Button>
   );

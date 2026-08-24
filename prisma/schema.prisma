@@ -7,7 +7,11 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-// --- NextAuth.js / Auth.js v5 ---
+// --- 旧ログイン(NextAuth.js / Auth.js v5)の残存テーブル ---
+//
+// 認証は Supabase Auth (Google) へ移行済みで、アプリはこれらのテーブルを読み書きしない(#38)。
+// User.id はサブスク・支払い方法・ラベル等の外部キーに使われているため User 自体は残す。
+// 空になった Account / Session / VerificationToken の削除は、移行が安定してから別途行う。
 
 model Account {
   id                String  @id @default(cuid())
@@ -46,7 +50,13 @@ model VerificationToken {
 }
 
 model User {
-  id            String    @id @default(cuid())
+  id String @id @default(cuid())
+
+  // Supabase Auth のユーザーID(auth.users.id)。共通の Supabase プロジェクトを他アプリと
+  // 共用しているため、この値は他アプリでも同じユーザーを指す。移行前から存在するユーザーは
+  // NULL のままで、初回ログイン時にメールアドレスで突き合わせて埋める(src/app/auth/callback)。
+  supabaseUserId String? @unique
+
   email         String    @unique
   emailVerified DateTime?
   name          String?

@@ -1,5 +1,6 @@
 import { timingSafeEqual } from "node:crypto";
 
+import { allowedEmails } from "@/lib/allowed-users";
 import { db } from "@/lib/db";
 
 /**
@@ -41,7 +42,8 @@ function isEqualConstantTime(a: string, b: string): boolean {
  * 複数ユーザーを扱う必要が出た時点で、初めて対応表を導入する。
  */
 export async function resolveInternalUserId(): Promise<string | null> {
-  const email = process.env.ALLOWED_EMAIL;
+  // ALLOWED_EMAIL はカンマ区切りで複数指定できるが、このAPIは利用者1人の前提のため先頭を使う。
+  const email = allowedEmails()[0];
   if (!email) return null;
 
   const user = await db.user.findUnique({ where: { email }, select: { id: true } });

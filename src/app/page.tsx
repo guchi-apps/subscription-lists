@@ -1,6 +1,5 @@
-import { CalendarDays, Wallet } from "lucide-react";
-import { signInWithGoogleAction } from "@/app/actions/auth";
-import { HomeSignInButton } from "./home-signin-button";
+import Link from "next/link";
+import { ArrowRight, CalendarDays, Wallet } from "lucide-react";
 
 export default function Home() {
   return (
@@ -19,9 +18,17 @@ export default function Home() {
         サブスクの契約状況をまとめて管理。Googleアカウントでログインして始めましょう。
       </p>
 
-      <form action={signInWithGoogleAction.bind(null, undefined)}>
-        <HomeSignInButton />
-      </form>
+      {/*
+        ログインは素のリンクにしておく。onClick でログインを開始すると、クライアントJSの
+        ハイドレーションが完了するまでボタンを押しても何も起きない状態が生まれる。
+      */}
+      <Link
+        href="/auth/signin"
+        className="mt-8 flex h-11 items-center justify-center gap-2 rounded-full bg-primary px-6 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90"
+      >
+        <ArrowRight className="size-4" />
+        Googleでログイン
+      </Link>
 
       <div className="mt-16 flex items-center gap-2 text-xs text-muted-foreground">
         <CalendarDays className="size-4" />
