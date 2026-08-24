@@ -7,7 +7,6 @@ import { ListChecks, CalendarDays, ChartGantt, CreditCard, Settings, Wallet } fr
 import { cn } from "@/lib/utils";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { SignOutButton } from "@/components/SignOutButton";
-import { signOutAction } from "@/app/actions/auth";
 
 const navItems = [
   { href: "/subscriptions", label: "一覧", icon: ListChecks },
@@ -49,7 +48,7 @@ export function Navigation() {
         </nav>
         <div className="flex items-center gap-1">
           <ThemeToggle />
-          <form action={signOutAction}>
+          <form action="/auth/signout" method="post">
             <SignOutButton />
           </form>
         </div>

@@ -1,14 +1,13 @@
 import { redirect } from "next/navigation";
 
-import { auth } from "@/auth";
+import { requireUserId } from "@/lib/auth-user";
 import { db } from "@/lib/db";
 import { SubscriptionForm } from "@/components/SubscriptionForm";
 import type { LabelDTO, MasterDTO } from "@/types";
 
 export default async function NewSubscriptionPage() {
-  const session = await auth();
-  const userId = session?.user?.id;
-  if (!userId) redirect("/auth/signin");
+  const userId = await requireUserId();
+  if (!userId) redirect("/login");
 
   const [paymentMethods, labels] = await Promise.all([
     db.paymentMethod.findMany({

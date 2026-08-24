@@ -76,6 +76,24 @@ Status = 今どこにいるか、Label = どんな性質・条件があるか、
 設定画面の「支払い方法」（`PaymentMethod`）はサブスクの支払い元を選ぶための名称だけを持つもので、
 券面情報ではない。こちらは引き続きこのアプリで管理する。
 
+## 認証
+
+ログインは**Supabase Auth（Google）**。共通のSupabaseプロジェクトを他アプリと共用しており、
+開発用と本番用でプロジェクトを分けている。NextAuth.js（Auth.js v5）からは issue #38 で移行した。
+
+- **`service_role`キーをフロントエンド・リポジトリ・VPSへ置かない。** 使うのは publishable key だけ
+- **JWTを自前でデコードしない。** `src/proxy.ts` が `supabase.auth.getUser()` を呼び、署名・有効期限・
+  発行元の検証をSupabase側にさせる。検証済みのユーザーIDは内部ヘッダー（`src/lib/auth-header.ts`）で
+  後段へ渡し、`getCurrentUser()` が同じ往復を繰り返さないようにしている
+- **「Supabaseでログインできる」と「このアプリを使ってよい」は別に判定する。** 許可判定は
+  `ALLOWED_EMAIL`（カンマ区切り）で `/auth/callback` が行う。**未設定なら全員拒否**
+- **`User.id` は差し替えない。** サブスク等の外部キーに使われているため、Supabaseのユーザーは
+  `User.supabaseUserId` で紐付ける（移行前のユーザーは初回ログイン時にメールアドレスで突き合わせる）
+- ログイン・ログアウトの導線は素のリンク/フォームにする（Route Handlerで処理する）。`onClick` で
+  開始すると、ハイドレーション完了までボタンを押しても何も起きない状態が生まれる
+
+設定方法・Redirect URLsの登録・画面確認用の認証バイパス（`DISABLE_AUTH`）は README「認証（Supabase Auth）」を参照。
+
 ## 検証コマンド
 
 | 目的 | コマンド |

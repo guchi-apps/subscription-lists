@@ -19,7 +19,7 @@ Authorization: Bearer <INTERNAL_API_KEY>
 
 キーの比較は `node:crypto` の `timingSafeEqual` で定数時間で行う（`src/lib/internal-auth.ts`）。
 
-**対象ユーザーは `ALLOWED_EMAIL`（ログインを許可するメールアドレス）で引く。** 利用者が1人だけの前提のため、APIキーとユーザーの対応表はDBに持っていない。複数ユーザーを扱う必要が出た時点で対応表を導入する。
+**対象ユーザーは `ALLOWED_EMAIL`（ログインを許可するメールアドレス）で引く。** 利用者が1人だけの前提のため、APIキーとユーザーの対応表はDBに持っていない。`ALLOWED_EMAIL` はカンマ区切りで複数指定できるが、このAPIは先頭のアドレスを使う。複数ユーザーを扱う必要が出た時点で対応表を導入する。
 
 ## `GET /api/internal/subscriptions`
 

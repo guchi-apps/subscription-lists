@@ -7,7 +7,7 @@
 - Next.js 16 (App Router) + React 19 + TypeScript
 - Tailwind CSS v4 + shadcn/ui (Radix UI)
 - Prisma + MariaDB/MySQL
-- NextAuth.js v5 (Google OAuth、本人のみアクセス可)
+- Supabase Auth (Google OAuth、本人のみアクセス可)
 - react-big-calendar (月間カレンダー) / React Hook Form + Zod
 
 ## セットアップ
@@ -22,7 +22,7 @@
 ```bash
 npm install
 
-# .env.local を作成（DB/Auth/Google の値を編集する）
+# .env.local を作成（DB・Supabase・許可メールアドレスの値を編集する）
 npm run env:init
 
 # .env.local の DATABASE_URL に基づき DB・ユーザーを作成
@@ -35,7 +35,40 @@ npm run db:migrate:dev
 npm run dev
 ```
 
-Google OAuth を使う場合は、開発用の Google Cloud クライアントを別途用意し、承認済みリダイレクト URI に `http://localhost:3000/api/auth/callback/google` を登録する。
+### 認証（Supabase Auth）
+
+ログインは共通の Supabase プロジェクトの Google プロバイダで行う。**開発用と本番用で Supabase プロジェクトを分ける**（Google Cloud プロジェクトは共通で、OAuth クライアントを dev/prod で分ける）。
+
+| 環境変数 | 内容 | 取得元 |
+| --- | --- | --- |
+| `NEXT_PUBLIC_SUPABASE_URL` | Supabase の project URL | 1Password の Supabase アイテム `project-url`。本番は organization 共通の GitHub variable `SUPABASE_PROJECT_URL` |
+| `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` | Supabase の publishable key | 同 `publishable-key`。本番は GitHub variable `SUPABASE_PUBLISHABLE_KEY` |
+| `ALLOWED_EMAIL` | ログインを許可する Google アカウント（カンマ区切りで複数可）。**未設定なら誰もログインできない** | 1Password `op://apps/subscribe-lists/allowed-email` |
+| `AUTH_URL` | 公開 URL。アプリからは参照しないが、Supabase の Redirect URLs 登録と Apache VirtualHost の生成で使う本番 URL の正 | 1Password `op://apps/subscribe-lists/auth-url` |
+
+ローカル開発では 1Password への依存を避けるため、**開発用** Supabase の値を `.env.local` へ直接書く（`.env.local` は Git 管理対象外）。`service_role` キーはフロントエンドにもリポジトリにも VPS にも置かない。
+
+Supabase ダッシュボードの **Authentication > URL Configuration > Redirect URLs** に、使うアクセス経路ぶんのコールバック URL を登録しておく。
+
+```text
+http://localhost:3000/auth/callback              # ローカル
+http://<LAN-IP>.sslip.io:3000/auth/callback      # LAN 上のスマホ等
+https://subscribe-dev.minagu.work/auth/callback  # Cloudflare Tunnel 経由
+https://<本番ドメイン>/auth/callback              # 本番（本番用 Supabase プロジェクト側）
+```
+
+本番では不要に広いワイルドカードを登録しない。
+
+**認証の流れ**（`src/lib/supabase/`・`src/app/auth/`）
+
+1. `/login` の「Googleでログイン」は素のリンクで `/auth/signin` を開く。ハイドレーション前でも押せるよう、認可 URL の組み立てはサーバー（Route Handler）で行う
+2. Google の同意後、`/auth/callback` が `exchangeCodeForSession` でセッションを確立し、`ALLOWED_EMAIL` で許可判定したうえで Supabase ユーザー ID を `User.supabaseUserId` へ紐付ける（既存ユーザーはメールアドレスで突き合わせる）
+3. `src/proxy.ts` が毎リクエストで `supabase.auth.getUser()` を呼び、アクセストークンの署名・有効期限・発行元を Supabase 側で検証する（自前でデコードしない）。検証済みの ID は内部ヘッダーで後段へ渡し、`getCurrentUser()` が同じ検証を繰り返さないようにしている
+4. ログアウトは `/auth/signout`（POST）
+
+**画面確認用の認証バイパス**
+
+GUI の無いホスト（SSH 越しの tmux 等）から OAuth ログインは完了できないため、`.env.local` に `DISABLE_AUTH=true` を設定している間だけログイン済み扱いにして、DB の先頭ユーザーとして画面・API を確認できる。`NODE_ENV=production` では常に無効（`src/lib/dev-auth.ts`）。
 
 ### 別端末（スマホ等）からの動作確認
 
@@ -58,7 +91,7 @@ cloudflared tunnel run dev-tunnel
 
 （Cloudflare 側のトンネル・DNS 設定はこのリポジトリの管理外。`~/.cloudflared/config.yml` にホスト設定済み）
 
-Google ログインを外出先でも確認する場合は、開発用 Google OAuth クライアントの承認済みリダイレクト URI に `https://subscribe-dev.minagu.work/api/auth/callback/google` を追加登録する。また、Cloudflare Access で本人の Google アカウントのみアクセスを許可する設定を Zero Trust ダッシュボード側で行うことを推奨する（このリポジトリの管理外）。
+Google ログインを外出先でも確認する場合は、**開発用 Supabase プロジェクト**の Redirect URLs に `https://subscribe-dev.minagu.work/auth/callback` を追加登録する。また、Cloudflare Access で本人の Google アカウントのみアクセスを許可する設定を Zero Trust ダッシュボード側で行うことを推奨する（このリポジトリの管理外）。
 
 ## 主なスクリプト
 
@@ -77,7 +110,7 @@ Google ログインを外出先でも確認する場合は、開発用 Google OA
 
 ```
 src/
-├── app/            # ルーティング（App Router）、API ルート、認証ページ
+├── app/            # ルーティング（App Router）、API ルート、認証（auth/・login/）
 ├── components/     # UI コンポーネント（ui/ 含む）
 ├── lib/            # DB クライアント、支払い計算ロジック、バリデーション等
 └── types/          # 型定義
