@@ -21,6 +21,10 @@ export async function notifySignalyLogin(params: {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
+        // 通知先が全アプリ共通の1チャンネルになったため、送信元はチャンネルでは分からない。
+        // Signalyは notifications.source で送信元を見分けるので、リポジトリ名を明示する
+        // （CI・デプロイ通知が embed の Repository フィールドから作る送信元と同じ形）。
+        source: "subscription-lists",
         embeds: [{ title: "🔐 subscription-lists にログイン", color: 5763719, fields }],
       }),
     });

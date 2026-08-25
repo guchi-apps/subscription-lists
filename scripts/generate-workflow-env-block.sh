@@ -11,6 +11,10 @@
 #   scripts/generate-workflow-env-block.sh SIGNALY_WEBHOOK_URL,HOST
 #
 # インデントは既定6（ジョブ直下の env: の下）。第2引数で変更できる。
+#
+# SCOPEが inherit の行も出力に含まれる（除外の判定はSOURCE列が空かどうかで、inherit行のSOURCEは
+# `-` で非空のため）。organization secretはワークフローからも `secrets.<GH_NAME>` で読めるので、
+# repo → inherit へ切り替えてもワークフロー側の env: ブロックは変更しなくてよい（#122）。
 set -euo pipefail
 
 MANIFEST="${MANIFEST:-$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)/.github/secrets-manifest.tsv}"
