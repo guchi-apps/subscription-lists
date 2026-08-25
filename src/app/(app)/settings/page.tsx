@@ -5,7 +5,6 @@ import { LabelManager } from "@/components/LabelManager";
 import { AppVersionInfo } from "@/components/AppVersionInfo";
 import { SignOutButton } from "@/components/SignOutButton";
 import { Card, CardContent } from "@/components/ui/card";
-import { signOutAction } from "@/app/actions/auth";
 import { CHANGELOG } from "@/lib/changelog";
 import packageJson from "../../../../package.json";
 
@@ -39,7 +38,7 @@ export default async function SettingsPage() {
           <h2 className="text-sm font-semibold text-muted-foreground">
             アカウント
           </h2>
-          <form action={signOutAction}>
+          <form action="/auth/signout" method="post">
             <SignOutButton />
           </form>
         </CardContent>

@@ -1,6 +1,6 @@
 import { notFound, redirect } from "next/navigation";
 
-import { auth } from "@/auth";
+import { requireUserId } from "@/lib/auth-user";
 import { db } from "@/lib/db";
 import { getUsdJpyRate } from "@/lib/exchange-rate";
 import { SubscriptionForm } from "@/components/SubscriptionForm";
@@ -12,9 +12,8 @@ export default async function EditSubscriptionPage({
 }: {
   params: Promise<{ id: string }>;
 }) {
-  const session = await auth();
-  const userId = session?.user?.id;
-  if (!userId) redirect("/auth/signin");
+  const userId = await requireUserId();
+  if (!userId) redirect("/login");
 
   const { id } = await params;
   const [subscription, paymentMethods, labels, usdJpyRate] = await Promise.all([

@@ -1,15 +1,14 @@
 import { redirect } from "next/navigation";
 
-import { auth } from "@/auth";
+import { requireUserId } from "@/lib/auth-user";
 import { db } from "@/lib/db";
 import { getUsdJpyRate } from "@/lib/exchange-rate";
 import { SubscriptionList } from "@/components/SubscriptionList";
 import type { SubscriptionDTO } from "@/types";
 
 export default async function SubscriptionsPage() {
-  const session = await auth();
-  const userId = session?.user?.id;
-  if (!userId) redirect("/auth/signin");
+  const userId = await requireUserId();
+  if (!userId) redirect("/login");
 
   const [subscriptions, usdJpyRate] = await Promise.all([
     db.subscription.findMany({
