@@ -5,6 +5,7 @@ import { db } from "@/lib/db";
 import { getRequestOrigin, safeNextPath } from "@/lib/request-origin";
 import { notifySignalyLogin } from "@/lib/signaly";
 import { createClient } from "@/lib/supabase/server";
+import { signOutLocal } from "@/lib/supabase/sign-out";
 
 export async function GET(request: NextRequest) {
   const origin = getRequestOrigin(request);
@@ -31,9 +32,9 @@ export async function GET(request: NextRequest) {
 
   // 共通の Supabase プロジェクトを他アプリと共用しているため、Supabase でログインできることと
   // このアプリを使ってよいことは別に判定する。許可外のアカウントはこのアプリのユーザーを作らず、
-  // Supabase のセッションも破棄する。
+  // このアプリのセッションだけを破棄する（global だと他アプリのログインまで切れる）。
   if (!isAllowedEmail(email)) {
-    await supabase.auth.signOut();
+    await signOutLocal(supabase);
     return NextResponse.redirect(`${origin}/login?error=not_allowed`);
   }
 
