@@ -13,6 +13,7 @@
     "lint": "eslint",
     "typecheck": "tsc --noEmit",
     "test": "npm run lint && npm run typecheck",
+    "test:unit": "node --test src/lib/supabase/sign-out.test.ts",
     "postinstall": "prisma generate",
     "env:init": "cp -n .env.local.example .env.local && echo '.env.local を編集してください（DB / Supabase / ALLOWED_EMAIL）'",
     "db:setup": "bash scripts/setup-db.sh",
