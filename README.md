@@ -77,7 +77,7 @@ GUI の無いホスト（SSH 越しの tmux 等）から OAuth ログインは�
 - **LAN 内**: `http://<LAN-IP>.sslip.io:3000`（同じ Wi-Fi 上のスマホ等から）
 - **外出先**: `https://subscribe-dev.minagu.work`（Cloudflare Tunnel 経由。共有トンネル `dev-tunnel` に相乗り）
 
-いずれも `next.config.ts` の `allowedDevOrigins`（`*.sslip.io` / `*.minagu.work`）でクロスオリジンリクエストを許可している。
+いずれも `next.config.mjs` の `allowedDevOrigins`（`*.sslip.io` / `*.minagu.work`）でクロスオリジンリクエストを許可している。
 
 **外出先からのアクセス（Cloudflare Tunnel）**
 
